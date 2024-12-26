@@ -9,14 +9,14 @@ import crypto from 'crypto';
 import { toast } from 'sonner';
 import { useSearchParams } from 'next/navigation';
 import { getSuggestions } from '@/lib/actions';
-import Error from 'next/error';
+import Error, { ErrorProps } from 'next/error';
 
 export type Message = {
   messageId: string;
   chatId: string;
   createdAt: Date;
   content: string;
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'plan';
   suggestions?: string[];
   sources?: Document[];
 };
@@ -26,195 +26,6 @@ export interface File {
   fileExtension: string;
   fileId: string;
 }
-
-// const useSocket = (
-//   url: string,
-//   setIsWSReady: (ready: boolean) => void,
-//   setError: (error: boolean) => void,
-// ) => {
-//   const [ws, setWs] = useState<WebSocket | null>(null);
-
-//   useEffect(() => {
-//     if (!ws) {
-//       const connectWs = async () => {
-//         let chatModel = localStorage.getItem('chatModel');
-//         let chatModelProvider = localStorage.getItem('chatModelProvider');
-//         let embeddingModel = localStorage.getItem('embeddingModel');
-//         let embeddingModelProvider = localStorage.getItem(
-//           'embeddingModelProvider',
-//         );
-
-//         const providers = await fetch(
-//           `${process.env.NEXT_PUBLIC_API_URL}/models`,
-//           {
-//             headers: {
-//               'Content-Type': 'application/json',
-//             },
-//           },
-//         ).then(async (res) => await res.json());
-
-//         if (
-//           !chatModel ||
-//           !chatModelProvider ||
-//           !embeddingModel ||
-//           !embeddingModelProvider
-//         ) {
-//           if (!chatModel || !chatModelProvider) {
-//             const chatModelProviders = providers.chatModelProviders;
-
-//             chatModelProvider = Object.keys(chatModelProviders)[0];
-
-//             if (chatModelProvider === 'custom_openai') {
-//               toast.error(
-//                 'Seems like you are using the custom OpenAI provider, please open the settings and configure the API key and base URL',
-//               );
-//               setError(true);
-//               return;
-//             } else {
-//               chatModel = Object.keys(chatModelProviders[chatModelProvider])[0];
-//               if (
-//                 !chatModelProviders ||
-//                 Object.keys(chatModelProviders).length === 0
-//               )
-//                 return toast.error('No chat models available');
-//             }
-//           }
-
-//           if (!embeddingModel || !embeddingModelProvider) {
-//             const embeddingModelProviders = providers.embeddingModelProviders;
-
-//             if (
-//               !embeddingModelProviders ||
-//               Object.keys(embeddingModelProviders).length === 0
-//             )
-//               return toast.error('No embedding models available');
-
-//             embeddingModelProvider = Object.keys(embeddingModelProviders)[0];
-//             embeddingModel = Object.keys(
-//               embeddingModelProviders[embeddingModelProvider],
-//             )[0];
-//           }
-
-//           localStorage.setItem('chatModel', chatModel!);
-//           localStorage.setItem('chatModelProvider', chatModelProvider);
-//           localStorage.setItem('embeddingModel', embeddingModel!);
-//           localStorage.setItem(
-//             'embeddingModelProvider',
-//             embeddingModelProvider,
-//           );
-//         } else {
-//           const chatModelProviders = providers.chatModelProviders;
-//           const embeddingModelProviders = providers.embeddingModelProviders;
-
-//           if (
-//             Object.keys(chatModelProviders).length > 0 &&
-//             !chatModelProviders[chatModelProvider]
-//           ) {
-//             chatModelProvider = Object.keys(chatModelProviders)[0];
-//             localStorage.setItem('chatModelProvider', chatModelProvider);
-//           }
-
-//           if (
-//             chatModelProvider &&
-//             chatModelProvider != 'custom_openai' &&
-//             !chatModelProviders[chatModelProvider][chatModel]
-//           ) {
-//             chatModel = Object.keys(chatModelProviders[chatModelProvider])[0];
-//             localStorage.setItem('chatModel', chatModel);
-//           }
-
-//           if (
-//             Object.keys(embeddingModelProviders).length > 0 &&
-//             !embeddingModelProviders[embeddingModelProvider]
-//           ) {
-//             embeddingModelProvider = Object.keys(embeddingModelProviders)[0];
-//             localStorage.setItem(
-//               'embeddingModelProvider',
-//               embeddingModelProvider,
-//             );
-//           }
-
-//           if (
-//             embeddingModelProvider &&
-//             !embeddingModelProviders[embeddingModelProvider][embeddingModel]
-//           ) {
-//             embeddingModel = Object.keys(
-//               embeddingModelProviders[embeddingModelProvider],
-//             )[0];
-//             localStorage.setItem('embeddingModel', embeddingModel);
-//           }
-//         }
-
-//         const wsURL = new URL(url);
-//         const searchParams = new URLSearchParams({});
-
-//         searchParams.append('chatModel', chatModel!);
-//         searchParams.append('chatModelProvider', chatModelProvider);
-
-//         if (chatModelProvider === 'custom_openai') {
-//           searchParams.append(
-//             'openAIApiKey',
-//             localStorage.getItem('openAIApiKey')!,
-//           );
-//           searchParams.append(
-//             'openAIBaseURL',
-//             localStorage.getItem('openAIBaseURL')!,
-//           );
-//         }
-
-//         searchParams.append('embeddingModel', embeddingModel!);
-//         searchParams.append('embeddingModelProvider', embeddingModelProvider);
-
-//         wsURL.search = searchParams.toString();
-
-//         const ws = new WebSocket(wsURL.toString());
-
-//         const timeoutId = setTimeout(() => {
-//           if (ws.readyState !== 1) {
-//             toast.error(
-//               'Failed to connect to the server. Please try again later.',
-//             );
-//           }
-//         }, 10000);
-
-//         ws.addEventListener('message', (e) => {
-//           const data = JSON.parse(e.data);
-//           if (data.type === 'signal' && data.data === 'open') {
-//             const interval = setInterval(() => {
-//               if (ws.readyState === 1) {
-//                 setIsWSReady(true);
-//                 clearInterval(interval);
-//               }
-//             }, 5);
-//             clearTimeout(timeoutId);
-//             console.log('[DEBUG] opened');
-//           }
-//           if (data.type === 'error') {
-//             toast.error(data.data);
-//           }
-//         });
-
-//         ws.onerror = () => {
-//           clearTimeout(timeoutId);
-//           setError(true);
-//           toast.error('WebSocket connection error.');
-//         };
-
-//         ws.onclose = () => {
-//           clearTimeout(timeoutId);
-//           setError(true);
-//           console.log('[DEBUG] closed');
-//         };
-
-//         setWs(ws);
-//       };
-
-//       connectWs();
-//     }
-//   }, [ws, url, setIsWSReady, setError]);
-
-//   return ws;
-// };
 
 const useSocket = (
   url: string, 
@@ -321,7 +132,9 @@ const loadMessages = async (
 
   console.log('[DEBUG] messages loaded');
 
-  document.title = messages[0].content;
+  if (typeof messages[0].content === 'string') {
+    document.title = messages[0].content;
+  }
 
   const files = data.chat.files.map((file: any) => {
     return {
@@ -545,6 +358,33 @@ const ChatWindow = ({ id }: { id?: string }) => {
           );
         }
       }
+
+      // plan
+      if (data.type === 'plan') {
+        try {
+          const plan = data.data.toString();
+          if (!added) {
+            setMessages((prevMessages) => [
+              ...prevMessages,
+              {
+                content: plan,
+                messageId: data.messageId,
+                chatId: chatId!,
+                role: 'plan',
+                sources: sources,
+                createdAt: new Date(),
+              },
+            ]);
+            added = true;
+          }
+
+          recievedMessage += data.data;
+          setMessageAppeared(true);
+        } catch (error) {
+          console.error('Failed to parse plan JSON:', error);
+          toast.error('Failed to parse plan data.');
+        }
+      }
     };
 
     ws?.addEventListener('message', messageHandler);
@@ -564,7 +404,9 @@ const ChatWindow = ({ id }: { id?: string }) => {
       return [...prev.slice(0, messages.length > 2 ? index - 1 : 0)];
     });
 
-    sendMessage(message.content, message.messageId);
+    if (typeof message.content === 'string') {
+      sendMessage(message.content, message.messageId);
+    }
   };
 
   useEffect(() => {

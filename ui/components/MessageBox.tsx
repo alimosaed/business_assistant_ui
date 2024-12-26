@@ -11,6 +11,8 @@ import {
   StopCircle,
   Layers3,
   Plus,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import Markdown from 'markdown-to-jsx';
 import Copy from './MessageActions/Copy';
@@ -39,8 +41,11 @@ const MessageBox = ({
   rewrite: (messageId: string) => void;
   sendMessage: (message: string) => void;
 }) => {
+  console.log('MessageBox', message);
   const [parsedMessage, setParsedMessage] = useState(message.content);
   const [speechMessage, setSpeechMessage] = useState(message.content);
+  const [collapsedSteps, setCollapsedSteps] = useState<boolean[]>([]);
+  const [steps, setSteps] = useState<{ step_number: string; description: string }[]>([]);
 
   useEffect(() => {
     const regex = /\[(\d+)\]/g;
@@ -59,11 +64,29 @@ const MessageBox = ({
       );
     }
 
-    setSpeechMessage(message.content.replace(regex, ''));
-    setParsedMessage(message.content);
+      setSpeechMessage(message.content.replace(regex, ''));
+      setParsedMessage(message.content);
   }, [message.content, message.sources, message.role]);
 
+  useEffect(() => {
+    if (message.role === 'plan') {
+      try {
+        const plan = JSON.parse(message.content);
+        setSteps(plan.steps);
+        setCollapsedSteps(new Array(plan.steps.length).fill(true));
+      } catch (error) {
+        console.error('Failed to parse plan:', error);
+      }
+    }
+  }, [message.content, message.role]);
+
   const { speechStatus, start, stop } = useSpeech({ text: speechMessage });
+
+  const toggleStep = (index: number) => {
+    setCollapsedSteps((prev) =>
+      prev.map((collapsed, i) => (i === index ? !collapsed : collapsed)),
+    );
+  };
 
   return (
     <div>
@@ -192,6 +215,42 @@ const MessageBox = ({
               chatHistory={history.slice(0, messageIndex - 1)}
               query={history[messageIndex - 1].content}
             />
+          </div>
+        </div>
+      )}
+
+      {message.role === 'plan' && (
+        <div className="flex flex-col space-y-6 w-full lg:w-9/12">
+          <div className="flex flex-col space-y-4">
+            {steps.map((step, index) => (
+              <div key={index} className="border rounded-lg p-4">
+                <div
+                  className="flex justify-between items-center cursor-pointer"
+                  onClick={() => toggleStep(index)}
+                >
+                  <h4 className="text-black dark:text-white font-medium">
+                    Step {step.step_number}: {step.description}
+                  </h4>
+                  {collapsedSteps[index] ? (
+                    <ChevronDown size={20} />
+                  ) : (
+                    <ChevronUp size={20} />
+                  )}
+                </div>
+                {!collapsedSteps[index] && (
+                  <div className="mt-2 text-black dark:text-white">
+                    <SearchImages
+                      query={step.description}
+                      chatHistory={history.slice(0, messageIndex)}
+                    />
+                    <SearchVideos
+                      query={step.description}
+                      chatHistory={history.slice(0, messageIndex)}
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       )}
