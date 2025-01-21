@@ -14,9 +14,9 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: 'Perplexica - Chat with the internet',
+  title: 'Bixpod - Build everything faster',
   description:
-    'Perplexica is an AI powered chatbot that is connected to the internet.',
+    'Bixpod empowers talented people to build everything.',
 };
 
 export default function RootLayout({

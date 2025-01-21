@@ -45,7 +45,7 @@ const MessageBox = ({
   const [parsedMessage, setParsedMessage] = useState(message.content);
   const [speechMessage, setSpeechMessage] = useState(message.content);
   const [collapsedSteps, setCollapsedSteps] = useState<boolean[]>([]);
-  const [steps, setSteps] = useState<{ step_number: string; description: string }[]>([]);
+  const [steps, setSteps] = useState<{ step_number: string; description: string; requirements: { materials: string[]; tools: string[] }[] }[]>([]);
 
   useEffect(() => {
     const regex = /\[(\d+)\]/g;
@@ -64,8 +64,8 @@ const MessageBox = ({
       );
     }
 
-      setSpeechMessage(message.content.replace(regex, ''));
-      setParsedMessage(message.content);
+    setSpeechMessage(message.content.replace(regex, ''));
+    setParsedMessage(message.content);
   }, [message.content, message.sources, message.role]);
 
   useEffect(() => {
@@ -98,11 +98,11 @@ const MessageBox = ({
         </div>
       )}
 
-      {message.role === 'assistant' && (
-        <div className="flex flex-col space-y-9 lg:space-y-0 lg:flex-row lg:justify-between lg:space-x-9">
+      {(message.role === 'assistant' || message.role === 'question') && (
+        <div className="flex flex-col space-y-9 w-full">
           <div
             ref={dividerRef}
-            className="flex flex-col space-y-6 w-full lg:w-9/12"
+            className="flex flex-col space-y-6 w-full"
           >
             {message.sources && message.sources.length > 0 && (
               <div className="flex flex-col space-y-2">
@@ -125,7 +125,7 @@ const MessageBox = ({
                   size={20}
                 />
                 <h3 className="text-black dark:text-white font-medium text-xl">
-                  Answer
+                  {message.role === 'question' ? 'Question' : 'Answer'}
                 </h3>
               </div>
               <Markdown
@@ -206,21 +206,11 @@ const MessageBox = ({
                 )}
             </div>
           </div>
-          <div className="lg:sticky lg:top-20 flex flex-col items-center space-y-3 w-full lg:w-3/12 z-30 h-full pb-4">
-            <SearchImages
-              query={history[messageIndex - 1].content}
-              chatHistory={history.slice(0, messageIndex - 1)}
-            />
-            <SearchVideos
-              chatHistory={history.slice(0, messageIndex - 1)}
-              query={history[messageIndex - 1].content}
-            />
-          </div>
         </div>
       )}
 
       {message.role === 'plan' && (
-        <div className="flex flex-col space-y-6 w-full lg:w-9/12">
+        <div className="flex flex-col space-y-6 w-full">
           <div className="flex flex-col space-y-4">
             {steps.map((step, index) => (
               <div key={index} className="border rounded-lg p-4">
@@ -239,10 +229,30 @@ const MessageBox = ({
                 </div>
                 {!collapsedSteps[index] && (
                   <div className="mt-2 text-black dark:text-white">
-                    <SearchImages
-                      query={step.description}
-                      chatHistory={history.slice(0, messageIndex)}
-                    />
+                    {step.requirements.map((requirement, reqIndex) => (
+                      <div key={reqIndex}>
+                        <h5 className="font-medium">Materials:</h5>
+                        {requirement.materials.map((material, matIndex) => (
+                          <div key={matIndex}>
+                            <p>{material}</p>
+                            <SearchImages
+                              query={material}
+                              chatHistory={history.slice(0, messageIndex)}
+                            />
+                          </div>
+                        ))}
+                        <h5 className="font-medium">Tools:</h5>
+                        {requirement.tools.map((tool, toolIndex) => (
+                          <div key={toolIndex}>
+                            <p>{tool}</p>
+                            <SearchImages
+                              query={tool}
+                              chatHistory={history.slice(0, messageIndex)}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    ))}
                     <SearchVideos
                       query={step.description}
                       chatHistory={history.slice(0, messageIndex)}

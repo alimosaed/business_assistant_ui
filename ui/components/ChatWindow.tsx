@@ -16,7 +16,7 @@ export type Message = {
   chatId: string;
   createdAt: Date;
   content: string;
-  role: 'user' | 'assistant' | 'plan';
+  role: 'user' | 'assistant' | 'plan' | 'question';
   suggestions?: string[];
   sources?: Document[];
 };
@@ -330,6 +330,67 @@ const ChatWindow = ({ id }: { id?: string }) => {
       }
 
       if (data.type === 'messageEnd') {
+        setChatHistory((prevHistory) => [
+          ...prevHistory,
+          ['human', message],
+          ['assistant', recievedMessage],
+        ]);
+
+        ws?.removeEventListener('message', messageHandler);
+        setLoading(false);
+
+        const lastMsg = messagesRef.current[messagesRef.current.length - 1];
+
+        if (
+          lastMsg.role === 'assistant' &&
+          lastMsg.sources &&
+          lastMsg.sources.length > 0 &&
+          !lastMsg.suggestions
+        ) {
+          const suggestions = await getSuggestions(messagesRef.current);
+          setMessages((prev) =>
+            prev.map((msg) => {
+              if (msg.messageId === lastMsg.messageId) {
+                return { ...msg, suggestions: suggestions };
+              }
+              return msg;
+            }),
+          );
+        }
+      }
+
+      // question & answer
+      if (data.type === 'question') {
+        if (!added) {
+          setMessages((prevMessages) => [
+            ...prevMessages,
+            {
+              content: data.data,
+              messageId: data.messageId,
+              chatId: chatId!,
+              role: 'question',
+              sources: sources,
+              createdAt: new Date(),
+            },
+          ]);
+          added = true;
+        }
+
+        setMessages((prev) =>
+          prev.map((message) => {
+            if (message.messageId === data.messageId) {
+              return { ...message, content: message.content + data.data };
+            }
+
+            return message;
+          }),
+        );
+
+        recievedMessage += data.data;
+        setMessageAppeared(true);
+      }
+
+      if (data.type === 'questionEnd') {
         setChatHistory((prevHistory) => [
           ...prevHistory,
           ['human', message],

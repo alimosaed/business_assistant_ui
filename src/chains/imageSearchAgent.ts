@@ -34,6 +34,7 @@ Rephrased question:
 type ImageSearchChainInput = {
   chat_history: BaseMessage[];
   query: string;
+  max_images?: number;
 };
 
 const strParser = new StringOutputParser();
@@ -51,7 +52,7 @@ const createImageSearchChain = (llm: BaseChatModel) => {
     PromptTemplate.fromTemplate(imageSearchChainPrompt),
     llm,
     strParser,
-    RunnableLambda.from(async (input: string) => {
+    RunnableLambda.from(async (input: string, { max_images = 1 }: ImageSearchChainInput) => {
       const res = await searchSearxng(input, {
         engines: ['bing images', 'google images'],
       });
@@ -68,7 +69,7 @@ const createImageSearchChain = (llm: BaseChatModel) => {
         }
       });
 
-      return images.slice(0, 10);
+      return images.slice(0, max_images);
     }),
   ]);
 };
