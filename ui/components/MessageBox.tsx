@@ -19,7 +19,6 @@ import Copy from './MessageActions/Copy';
 import Rewrite from './MessageActions/Rewrite';
 import MessageSources from './MessageSources';
 import SearchImages from './SearchImages';
-import SearchVideos from './SearchVideos';
 import { useSpeech } from 'react-text-to-speech';
 
 const MessageBox = ({
@@ -45,7 +44,95 @@ const MessageBox = ({
   const [parsedMessage, setParsedMessage] = useState(message.content);
   const [speechMessage, setSpeechMessage] = useState(message.content);
   const [collapsedSteps, setCollapsedSteps] = useState<boolean[]>([]);
-  const [steps, setSteps] = useState<{ step_number: string; description: string; requirements: { materials: string[]; tools: string[] }[] }[]>([]);
+  const [steps, setSteps] = useState<{ 
+    step_number: string; 
+    description: string; 
+    requirements: { 
+      materials: { 
+        name: string; 
+        quantity: number; 
+        unit: string; 
+        recommended: { 
+          shop: { 
+            market: string; 
+            SearchResult: { 
+              Items: { 
+                ASIN: string; 
+                DetailPageURL: string; 
+                ItemInfo: { 
+                  Title: { DisplayValue: string }; 
+                  ByLineInfo: { 
+                    Brand: { DisplayValue: string }; 
+                    Manufacturer: { DisplayValue: string }; 
+                  }; 
+                }; 
+                Images: { 
+                  Primary: { 
+                    Medium: { 
+                      URL: string; 
+                      Height: number; 
+                      Width: number; 
+                    }; 
+                  }; 
+                }; 
+                Offers: { 
+                  Listings: { 
+                    Price: { 
+                      DisplayAmount: string; 
+                      Amount: number; 
+                      Currency: string; 
+                    }; 
+                  }[]; 
+                }; 
+              }[]; 
+            }; 
+          }[]; 
+        }; 
+      }[]; 
+      tools: { 
+        name: string; 
+        quantity: number; 
+        unit: string; 
+        recommended: { 
+          shop: { 
+            market: string; 
+            SearchResult: { 
+              Items: { 
+                ASIN: string; 
+                DetailPageURL: string; 
+                ItemInfo: { 
+                  Title: { DisplayValue: string }; 
+                  ByLineInfo: { 
+                    Brand: { DisplayValue: string }; 
+                    Manufacturer: { DisplayValue: string }; 
+                  }; 
+                }; 
+                Images: { 
+                  Primary: { 
+                    Medium: { 
+                      URL: string; 
+                      Height: number; 
+                      Width: number; 
+                    }; 
+                  }; 
+                }; 
+                Offers: { 
+                  Listings: { 
+                    Price: { 
+                      DisplayAmount: string; 
+                      Amount: number; 
+                      Currency: string; 
+                    }; 
+                  }[]; 
+                }; 
+              }[]; 
+            }; 
+          }[]; 
+        }; 
+      }[]; 
+    }; 
+    video: string; 
+  }[]>([]);
 
   useEffect(() => {
     const regex = /\[(\d+)\]/g;
@@ -218,9 +305,9 @@ const MessageBox = ({
                   className="flex justify-between items-center cursor-pointer"
                   onClick={() => toggleStep(index)}
                 >
-                  <h4 className="text-black dark:text-white font-medium">
+                  <h3 className="text-black dark:text-white font-medium text-xl">
                     Step {step.step_number}: {step.description}
-                  </h4>
+                  </h3>
                   {collapsedSteps[index] ? (
                     <ChevronDown size={20} />
                   ) : (
@@ -229,34 +316,63 @@ const MessageBox = ({
                 </div>
                 {!collapsedSteps[index] && (
                   <div className="mt-2 text-black dark:text-white">
-                    {step.requirements.map((requirement, reqIndex) => (
-                      <div key={reqIndex}>
-                        <h5 className="font-medium">Materials:</h5>
-                        {requirement.materials.map((material, matIndex) => (
-                          <div key={matIndex}>
-                            <p>{material}</p>
-                            <SearchImages
-                              query={material}
-                              chatHistory={history.slice(0, messageIndex)}
-                            />
-                          </div>
-                        ))}
-                        <h5 className="font-medium">Tools:</h5>
-                        {requirement.tools.map((tool, toolIndex) => (
-                          <div key={toolIndex}>
-                            <p>{tool}</p>
-                            <SearchImages
-                              query={tool}
-                              chatHistory={history.slice(0, messageIndex)}
-                            />
-                          </div>
-                        ))}
+                    <div className="mb-4">
+                      <iframe
+                        width="100%"
+                        height="315"
+                        src={`https://www.youtube.com/embed/${new URL(step.video).searchParams.get('v')}`}
+                        title={`Step ${step.step_number} Video`}
+                        frameBorder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      ></iframe>
+                    </div>
+                    {step.requirements.materials.map((material, matIndex) => (
+                      <div key={matIndex} className="flex flex-col space-y-4 mb-4">
+                        <p>{material.name} ({material.quantity} {material.unit})</p>
+                        <div className="flex flex-col space-y-2">
+                          {material.recommended.shop.map((shop, shopIndex) => (
+                            shop.SearchResult.Items.map((item, itemIndex) => (
+                              <div key={itemIndex} className="flex items-center space-x-4 border p-2 rounded-lg">
+                                <a href={item.DetailPageURL} target="_blank" rel="noopener noreferrer">
+                                  <img src={item.Images.Primary.Medium.URL} alt={item.ItemInfo.Title.DisplayValue} className="w-16 h-16 object-cover border-2 border-gray-300 rounded-md" />
+                                </a>
+                                <div className="flex flex-col">
+                                  <a href={item.DetailPageURL} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                                    {item.ItemInfo.Title.DisplayValue}
+                                  </a>
+                                  <p className="text-sm text-gray-500">{item.ItemInfo.ByLineInfo.Brand.DisplayValue}</p>
+                                  <p className="text-lg font-bold">{item.Offers.Listings[0].Price.DisplayAmount}</p>
+                                </div>
+                              </div>
+                            ))
+                          ))}
+                        </div>
                       </div>
                     ))}
-                    <SearchVideos
-                      query={step.description}
-                      chatHistory={history.slice(0, messageIndex)}
-                    />
+                    {step.requirements.tools.map((tool, toolIndex) => (
+                      <div key={toolIndex} className="flex flex-col space-y-4 mb-4">
+                        <p>{tool.name} ({tool.quantity} {tool.unit})</p>
+                        <div className="flex flex-col space-y-2">
+                          {tool.recommended.shop.map((shop, shopIndex) => (
+                            shop.SearchResult.Items.map((item, itemIndex) => (
+                              <div key={itemIndex} className="flex items-center space-x-4 border p-2 rounded-lg">
+                                <a href={item.DetailPageURL} target="_blank" rel="noopener noreferrer">
+                                  <img src={item.Images.Primary.Medium.URL} alt={item.ItemInfo.Title.DisplayValue} className="w-16 h-16 object-cover border-2 border-gray-300 rounded-md" />
+                                </a>
+                                <div className="flex flex-col">
+                                  <a href={item.DetailPageURL} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                                    {item.ItemInfo.Title.DisplayValue}
+                                  </a>
+                                  <p className="text-sm text-gray-500">{item.ItemInfo.ByLineInfo.Brand.DisplayValue}</p>
+                                  <p className="text-lg font-bold">{item.Offers.Listings[0].Price.DisplayAmount}</p>
+                                </div>
+                              </div>
+                            ))
+                          ))}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

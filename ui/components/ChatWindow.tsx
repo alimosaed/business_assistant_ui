@@ -304,7 +304,7 @@ const ChatWindow = ({ id }: { id?: string }) => {
           setMessages((prevMessages) => [
             ...prevMessages,
             {
-              content: '', //data.data,
+              content: data.data,
               messageId: data.messageId,
               chatId: chatId!,
               role: 'assistant',
@@ -313,17 +313,17 @@ const ChatWindow = ({ id }: { id?: string }) => {
             },
           ]);
           added = true;
-        }
+        } else {
+          setMessages((prev) =>
+            prev.map((message) => {
+              if (message.messageId === data.messageId) {
+                return { ...message, content: message.content + data.data };
+              }
 
-        setMessages((prev) =>
-          prev.map((message) => {
-            if (message.messageId === data.messageId) {
-              return { ...message, content: message.content + data.data };
-            }
-
-            return message;
-          }),
-        );
+              return message;
+            }),
+          );
+        };
 
         recievedMessage += data.data;
         setMessageAppeared(true);
@@ -374,17 +374,17 @@ const ChatWindow = ({ id }: { id?: string }) => {
             },
           ]);
           added = true;
-        }
+        } else {
+          setMessages((prev) =>
+            prev.map((message) => {
+              if (message.messageId === data.messageId) {
+                return { ...message, content: message.content + data.data };
+              }
 
-        setMessages((prev) =>
-          prev.map((message) => {
-            if (message.messageId === data.messageId) {
-              return { ...message, content: message.content + data.data };
-            }
-
-            return message;
-          }),
-        );
+              return message;
+            }),
+          );
+        };
 
         recievedMessage += data.data;
         setMessageAppeared(true);
