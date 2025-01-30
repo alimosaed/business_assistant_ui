@@ -40,7 +40,6 @@ const MessageBox = ({
   rewrite: (messageId: string) => void;
   sendMessage: (message: string) => void;
 }) => {
-  console.log('MessageBox', message);
   const [parsedMessage, setParsedMessage] = useState(message.content);
   const [speechMessage, setSpeechMessage] = useState(message.content);
   const [collapsedSteps, setCollapsedSteps] = useState<boolean[]>([]);
@@ -316,61 +315,75 @@ const MessageBox = ({
                 </div>
                 {!collapsedSteps[index] && (
                   <div className="mt-2 text-black dark:text-white">
-                    <div className="mb-4">
-                      <iframe
-                        width="100%"
-                        height="315"
-                        src={`https://www.youtube.com/embed/${new URL(step.video).searchParams.get('v')}`}
-                        title={`Step ${step.step_number} Video`}
-                        frameBorder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      ></iframe>
-                    </div>
-                    {step.requirements.materials.map((material, matIndex) => (
+                    {step.video && (
+                      <div className="mb-4">
+                        <iframe
+                          width="100%"
+                          height="315"
+                          src={step.video}
+                          title={`Step ${step.step_number} Video`}
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        ></iframe>
+                      </div>
+                    )}
+                    {step.requirements.materials.length > 0 && step.requirements.materials.map((material, matIndex) => (
                       <div key={matIndex} className="flex flex-col space-y-4 mb-4">
                         <p>{material.name} ({material.quantity} {material.unit})</p>
-                        <div className="flex flex-col space-y-2">
-                          {material.recommended.shop.map((shop, shopIndex) => (
-                            shop.SearchResult.Items.map((item, itemIndex) => (
-                              <div key={itemIndex} className="flex items-center space-x-4 border p-2 rounded-lg">
-                                <a href={item.DetailPageURL} target="_blank" rel="noopener noreferrer">
-                                  <img src={item.Images.Primary.Medium.URL} alt={item.ItemInfo.Title.DisplayValue} className="w-16 h-16 object-cover border-2 border-gray-300 rounded-md" />
-                                </a>
-                                <div className="flex flex-col">
-                                  <a href={item.DetailPageURL} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-                                    {item.ItemInfo.Title.DisplayValue}
-                                  </a>
-                                  <p className="text-sm text-gray-500">{item.ItemInfo.ByLineInfo.Brand.DisplayValue}</p>
-                                  <p className="text-lg font-bold">{item.Offers.Listings[0].Price.DisplayAmount}</p>
+                        {material.recommended && material.recommended.shop.length > 0 && (
+                          <div className="flex flex-col space-y-2">
+                            {material.recommended.shop.map((shop, shopIndex) => (
+                              shop.SearchResult.Items.length > 0 && shop.SearchResult.Items.map((item, itemIndex) => (
+                                <div key={itemIndex} className="flex items-center space-x-4 border p-2 rounded-lg">
+                                  {item.DetailPageURL && (
+                                    <a href={item.DetailPageURL} target="_blank" rel="noopener noreferrer">
+                                      <img src={item.Images.Primary.Medium.URL} alt={item.ItemInfo.Title.DisplayValue} className="w-16 h-16 object-cover border-2 border-gray-300 rounded-md" />
+                                    </a>
+                                  )}
+                                  <div className="flex flex-col">
+                                    {item.DetailPageURL && (
+                                      <a href={item.DetailPageURL} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                                        {item.ItemInfo.Title.DisplayValue}
+                                      </a>
+                                    )}
+                                    <p className="text-sm text-gray-500">{item.ItemInfo.ByLineInfo.Brand.DisplayValue}</p>
+                                    <p className="text-lg font-bold">{item.Offers.Listings[0].Price.DisplayAmount}</p>
+                                  </div>
                                 </div>
-                              </div>
-                            ))
-                          ))}
-                        </div>
+                              ))
+                            ))}
+                          </div>
+                        )}
                       </div>
                     ))}
-                    {step.requirements.tools.map((tool, toolIndex) => (
+                    {step.requirements.tools.length > 0 && step.requirements.tools.map((tool, toolIndex) => (
                       <div key={toolIndex} className="flex flex-col space-y-4 mb-4">
                         <p>{tool.name} ({tool.quantity} {tool.unit})</p>
-                        <div className="flex flex-col space-y-2">
-                          {tool.recommended.shop.map((shop, shopIndex) => (
-                            shop.SearchResult.Items.map((item, itemIndex) => (
-                              <div key={itemIndex} className="flex items-center space-x-4 border p-2 rounded-lg">
-                                <a href={item.DetailPageURL} target="_blank" rel="noopener noreferrer">
-                                  <img src={item.Images.Primary.Medium.URL} alt={item.ItemInfo.Title.DisplayValue} className="w-16 h-16 object-cover border-2 border-gray-300 rounded-md" />
-                                </a>
-                                <div className="flex flex-col">
-                                  <a href={item.DetailPageURL} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-                                    {item.ItemInfo.Title.DisplayValue}
-                                  </a>
-                                  <p className="text-sm text-gray-500">{item.ItemInfo.ByLineInfo.Brand.DisplayValue}</p>
-                                  <p className="text-lg font-bold">{item.Offers.Listings[0].Price.DisplayAmount}</p>
+                        {tool.recommended && tool.recommended.shop.length > 0 && (
+                          <div className="flex flex-col space-y-2">
+                            {tool.recommended.shop.map((shop, shopIndex) => (
+                              shop.SearchResult.Items.length > 0 && shop.SearchResult.Items.map((item, itemIndex) => (
+                                <div key={itemIndex} className="flex items-center space-x-4 border p-2 rounded-lg">
+                                  {item.DetailPageURL && (
+                                    <a href={item.DetailPageURL} target="_blank" rel="noopener noreferrer">
+                                      <img src={item.Images.Primary.Medium.URL} alt={item.ItemInfo.Title.DisplayValue} className="w-16 h-16 object-cover border-2 border-gray-300 rounded-md" />
+                                    </a>
+                                  )}
+                                  <div className="flex flex-col">
+                                    {item.DetailPageURL && (
+                                      <a href={item.DetailPageURL} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                                        {item.ItemInfo.Title.DisplayValue}
+                                      </a>
+                                    )}
+                                    <p className="text-sm text-gray-500">{item.ItemInfo.ByLineInfo.Brand.DisplayValue}</p>
+                                    <p className="text-lg font-bold">{item.Offers.Listings[0].Price.DisplayAmount}</p>
+                                  </div>
                                 </div>
-                              </div>
-                            ))
-                          ))}
-                        </div>
+                              ))
+                            ))}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
