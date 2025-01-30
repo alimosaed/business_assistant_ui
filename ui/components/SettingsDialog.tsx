@@ -231,6 +231,8 @@ const SettingsDialog = ({
                       </p>
                       <ThemeSwitcher />
                     </div>
+
+{/* 
                     {config.chatModelProviders && (
                       <div className="flex flex-col space-y-1">
                         <p className="text-black/70 dark:text-white/70 text-sm">
@@ -346,7 +348,6 @@ const SettingsDialog = ({
                           </div>
                         </>
                       )}
-                    {/* Embedding models */}
                     {config.embeddingModelProviders && (
                       <div className="flex flex-col space-y-1">
                         <p className="text-black/70 dark:text-white/70 text-sm">
@@ -492,9 +493,10 @@ const SettingsDialog = ({
                           })
                         }
                       />
-                    </div>
+                    </div> */}
                   </div>
                 )}
+                
                 {isLoading && (
                   <div className="w-full flex items-center justify-center mt-6 text-black/70 dark:text-white/70 py-6">
                     <RefreshCcw className="animate-spin" />
