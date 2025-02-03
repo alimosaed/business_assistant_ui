@@ -46,6 +46,7 @@ const MessageBox = ({
   const [steps, setSteps] = useState<{ 
     step_number: string; 
     description: string; 
+    details: string;
     requirements: { 
       materials: { 
         name: string; 
@@ -60,10 +61,7 @@ const MessageBox = ({
                 DetailPageURL: string; 
                 ItemInfo: { 
                   Title: { DisplayValue: string }; 
-                  ByLineInfo: { 
-                    Brand: { DisplayValue: string }; 
-                    Manufacturer: { DisplayValue: string }; 
-                  }; 
+                  Manufacturer: { DisplayValue: string }; 
                 }; 
                 Images: { 
                   Primary: { 
@@ -85,7 +83,7 @@ const MessageBox = ({
                 }; 
               }[]; 
             }; 
-          }[]; 
+          }; 
         }; 
       }[]; 
       tools: { 
@@ -101,10 +99,7 @@ const MessageBox = ({
                 DetailPageURL: string; 
                 ItemInfo: { 
                   Title: { DisplayValue: string }; 
-                  ByLineInfo: { 
-                    Brand: { DisplayValue: string }; 
-                    Manufacturer: { DisplayValue: string }; 
-                  }; 
+                  Manufacturer: { DisplayValue: string }; 
                 }; 
                 Images: { 
                   Primary: { 
@@ -126,7 +121,7 @@ const MessageBox = ({
                 }; 
               }[]; 
             }; 
-          }[]; 
+          }; 
         }; 
       }[]; 
     }; 
@@ -335,7 +330,7 @@ const MessageBox = ({
                     {step.requirements.materials.length > 0 && step.requirements.materials.map((material, matIndex) => (
                       <div key={matIndex} className="flex flex-col space-y-4 mb-4">
                         <p>{material.name} ({material.quantity} {material.unit})</p>
-                        {material.recommended && material.recommended.shop.SearchResult.Items.length > 0 && (
+                        {material.recommended && material.recommended.shop. SearchResult.Items.length > 0 && (
                           <div className="flex flex-col space-y-2">
                             {material.recommended.shop.SearchResult.Items.map((item, itemIndex) => (
                               <div key={itemIndex} className="flex items-center space-x-4 border p-2 rounded-lg">
