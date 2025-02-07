@@ -53,76 +53,44 @@ const MessageBox = ({
         quantity: number; 
         unit: string; 
         recommended: { 
-          shop: { 
-            market: string; 
-            SearchResult: { 
-              Items: { 
-                ASIN: string; 
-                DetailPageURL: string; 
-                ItemInfo: { 
-                  Title: { DisplayValue: string }; 
-                  Manufacturer: { DisplayValue: string }; 
-                }; 
-                Images: { 
-                  Primary: { 
-                    Medium: { 
-                      URL: string; 
-                      Height: number; 
-                      Width: number; 
+                asin: string; 
+                detail_page_url: string; 
+                title: string ; 
+                manufacturer: string; 
+                images: { 
+                  primary: { 
+                    medium: { 
+                      url: string; 
+                      height: number; 
+                      width: number; 
                     }; 
                   }; 
                 }; 
-                Offers: { 
-                  Listings: { 
-                    Price: { 
-                      DisplayAmount: string; 
-                      Amount: number; 
-                      Currency: string; 
-                    }; 
-                  }[]; 
-                }; 
-              }[]; 
-            }; 
-          }; 
-        }; 
+                price: number;
+                currency: string; 
+        }[]; 
       }[]; 
       tools: { 
         name: string; 
         quantity: number; 
         unit: string; 
         recommended: { 
-          shop: { 
-            market: string; 
-            SearchResult: { 
-              Items: { 
-                ASIN: string; 
-                DetailPageURL: string; 
-                ItemInfo: { 
-                  Title: { DisplayValue: string }; 
-                  Manufacturer: { DisplayValue: string }; 
-                }; 
-                Images: { 
-                  Primary: { 
-                    Medium: { 
-                      URL: string; 
-                      Height: number; 
-                      Width: number; 
+                asin: string; 
+                detail_page_url: string; 
+                title: string; 
+                manufacturer: string;  
+                images: { 
+                  primary: { 
+                    medium: { 
+                      url: string; 
+                      height: number; 
+                      width: number; 
                     }; 
                   }; 
                 }; 
-                Offers: { 
-                  Listings: { 
-                    Price: { 
-                      DisplayAmount: string; 
-                      Amount: number; 
-                      Currency: string; 
-                    }; 
-                  }[]; 
-                }; 
-              }[]; 
-            }; 
-          }; 
-        }; 
+                price: number;
+                currency: string; 
+        }[]; 
       }[]; 
     }; 
     video: string; 
@@ -330,23 +298,23 @@ const MessageBox = ({
                     {step.requirements.materials.length > 0 && step.requirements.materials.map((material, matIndex) => (
                       <div key={matIndex} className="flex flex-col space-y-4 mb-4">
                         <p>{material.name} ({material.quantity} {material.unit})</p>
-                        {material.recommended && material.recommended.shop. SearchResult.Items.length > 0 && (
+                        {material.recommended && material.recommended.length > 0 && (
                           <div className="flex flex-col space-y-2">
-                            {material.recommended.shop.SearchResult.Items.map((item, itemIndex) => (
+                            {material.recommended.map((item, itemIndex) => (
                               <div key={itemIndex} className="flex items-center space-x-4 border p-2 rounded-lg">
-                                {item.DetailPageURL && (
-                                  <a href={item.DetailPageURL} target="_blank" rel="noopener noreferrer">
-                                    <img src={item.Images.Primary.Medium.URL} alt={item.ItemInfo.Title.DisplayValue} className="w-16 h-16 object-cover border-2 border-gray-300 rounded-md" />
+                                {item.detail_page_url && (
+                                  <a href={item.detail_page_url} target="_blank" rel="noopener noreferrer">
+                                    <img src={item.images.primary.medium.url} alt={item.title} className="w-16 h-16 object-cover border-2 border-gray-300 rounded-md" />
                                   </a>
                                 )}
                                 <div className="flex flex-col">
-                                  {item.DetailPageURL && (
-                                    <a href={item.DetailPageURL} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-                                      {item.ItemInfo.Title.DisplayValue}
+                                  {item.detail_page_url && (
+                                    <a href={item.detail_page_url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                                      {item.title}
                                     </a>
                                   )}
-                                  <p className="text-sm text-gray-500">{item.ItemInfo.Manufacturer.DisplayValue}</p>
-                                  <p className="text-lg font-bold">{item.Offers.Listings[0].Price.DisplayAmount}</p>
+                                  <p className="text-sm text-gray-500">{item.manufacturer}</p>
+                                  <p className="text-lg font-bold">{item.price}</p>
                                 </div>
                               </div>
                             ))}
@@ -357,23 +325,23 @@ const MessageBox = ({
                     {step.requirements.tools.length > 0 && step.requirements.tools.map((tool, toolIndex) => (
                       <div key={toolIndex} className="flex flex-col space-y-4 mb-4">
                         <p>{tool.name} ({tool.quantity} {tool.unit})</p>
-                        {tool.recommended && tool.recommended.shop.SearchResult.Items.length > 0 && (
+                        {tool.recommended && tool.recommended.length > 0 && (
                           <div className="flex flex-col space-y-2">
-                            {tool.recommended.shop.SearchResult.Items.map((item, itemIndex) => (
+                            {tool.recommended.map((item, itemIndex) => (
                               <div key={itemIndex} className="flex items-center space-x-4 border p-2 rounded-lg">
-                                {item.DetailPageURL && (
-                                  <a href={item.DetailPageURL} target="_blank" rel="noopener noreferrer">
-                                    <img src={item.Images.Primary.Medium.URL} alt={item.ItemInfo.Title.DisplayValue} className="w-16 h-16 object-cover border-2 border-gray-300 rounded-md" />
+                                {item.detail_page_url && (
+                                  <a href={item.detail_page_url} target="_blank" rel="noopener noreferrer">
+                                    <img src={item.images.primary.medium.url} alt={item.title} className="w-16 h-16 object-cover border-2 border-gray-300 rounded-md" />
                                   </a>
                                 )}
                                 <div className="flex flex-col">
-                                  {item.DetailPageURL && (
-                                    <a href={item.DetailPageURL} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
-                                      {item.ItemInfo.Title.DisplayValue}
+                                  {item.detail_page_url && (
+                                    <a href={item.detail_page_url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                                      {item.title}
                                     </a>
                                   )}
-                                  <p className="text-sm text-gray-500">{item.ItemInfo.Manufacturer.DisplayValue}</p>
-                                  <p className="text-lg font-bold">{item.Offers.Listings[0].Price.DisplayAmount}</p>
+                                  <p className="text-sm text-gray-500">{item.manufacturer}</p>
+                                  <p className="text-lg font-bold">{item.price}</p>
                                 </div>
                               </div>
                             ))}
