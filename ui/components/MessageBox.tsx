@@ -13,6 +13,7 @@ import {
   Plus,
   ChevronDown,
   ChevronUp,
+  DollarSign,
 } from 'lucide-react';
 import Markdown from 'markdown-to-jsx';
 import Copy from './MessageActions/Copy';
@@ -93,7 +94,9 @@ const MessageBox = ({
         }[]; 
       }[]; 
     }; 
-    video: string; 
+    video: {
+      url: string; 
+    }
   }[]>([]);
 
   useEffect(() => {
@@ -283,17 +286,19 @@ const MessageBox = ({
                       <p className="text-sm text-gray-500 mt-2">{step.details}</p>
                     )}
                     {step.video && (
-                      <div className="mb-4">
+                      <>
+                        <div className="mb-4"></div> {/* Add this empty div for spacing */}
                         <iframe
                           width="100%"
                           height="315"
-                          src={step.video}
+                          src={step.video.url}
                           title={`Step ${step.step_number} Video`}
                           frameBorder="0"
                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                           allowFullScreen
                         ></iframe>
-                      </div>
+                        <div className="mb-4"></div> {/* Add this empty div for spacing */}
+                      </>
                     )}
                     {step.requirements.materials.length > 0 && step.requirements.materials.map((material, matIndex) => (
                       <div key={matIndex} className="flex flex-col space-y-4 mb-4">
@@ -313,8 +318,9 @@ const MessageBox = ({
                                       {item.title}
                                     </a>
                                   )}
-                                  <p className="text-sm text-gray-500">{item.manufacturer}</p>
-                                  <p className="text-lg font-bold">{item.price}</p>
+                                  <p className="text-lg flex items-center">
+                                    <DollarSign size={16} className="mr-1" /> {item.price} {item.currency}
+                                  </p>
                                 </div>
                               </div>
                             ))}
@@ -340,8 +346,9 @@ const MessageBox = ({
                                       {item.title}
                                     </a>
                                   )}
-                                  <p className="text-sm text-gray-500">{item.manufacturer}</p>
-                                  <p className="text-lg font-bold">{item.price}</p>
+                                  <p className="text-lg flex items-center">
+                                    <DollarSign size={16} className="mr-1" /> {item.price} {item.currency}
+                                  </p>
                                 </div>
                               </div>
                             ))}
