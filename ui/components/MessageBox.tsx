@@ -44,6 +44,7 @@ const MessageBox = ({
   const [parsedMessage, setParsedMessage] = useState(message.content);
   const [speechMessage, setSpeechMessage] = useState(message.content);
   const [collapsedSteps, setCollapsedSteps] = useState<boolean[]>([]);
+  const [collapsedReasons, setCollapsedReasons] = useState<boolean[]>([]);
   const [steps, setSteps] = useState<{ 
     step_number: string; 
     description: string; 
@@ -52,6 +53,7 @@ const MessageBox = ({
       materials: { 
         name: string; 
         quantity: number; 
+        reason: string[];
         unit: string; 
         recommended: { 
                 asin: string; 
@@ -74,6 +76,7 @@ const MessageBox = ({
       tools: { 
         name: string; 
         quantity: number; 
+        reason: string[];
         unit: string; 
         recommended: { 
                 asin: string; 
@@ -126,6 +129,7 @@ const MessageBox = ({
         const plan = JSON.parse(message.content);
         setSteps(plan.steps);
         setCollapsedSteps(new Array(plan.steps.length).fill(true));
+        setCollapsedReasons(new Array(plan.steps.length).fill(true));
         console.log('Plan:', plan);
       } catch (error) {
         console.error('Failed to parse plan:', error);
@@ -141,13 +145,27 @@ const MessageBox = ({
     );
   };
 
+  const toggleReason = (index: number) => {
+    setCollapsedReasons((prev) =>
+      prev.map((collapsed, i) => (i === index ? !collapsed : collapsed)),
+    );
+  };
+
+  const formatReason = (reason: string[]) => {
+    return reason.map((line, index) => (
+      <li key={index} className="text-sm text-gray-500 mt-2">
+        {line}
+      </li>
+    ));
+  };
+
   return (
     <div>
       {message.role === 'user' && (
         <div className={cn('w-full', messageIndex === 0 ? 'pt-16' : 'pt-8')}>
-          <h2 className="text-black dark:text-white font-medium text-3xl lg:w-9/12">
+          <h3 className="text-black dark:text-white font-medium text-2xl lg:w-9/12">
             {message.content}
-          </h2>
+          </h3>
         </div>
       )}
 
@@ -169,7 +187,7 @@ const MessageBox = ({
               </div>
             )}
             <div className="flex flex-col space-y-2">
-              <div className="flex flex-row items-center space-x-2">
+              {/* <div className="flex flex-row items-center space-x-2">
                 <Disc3
                   className={cn(
                     'text-black dark:text-white',
@@ -180,7 +198,7 @@ const MessageBox = ({
                 <h3 className="text-black dark:text-white font-medium text-xl">
                   {message.role === 'question' ? 'Question' : 'Answer'}
                 </h3>
-              </div>
+              </div> */}
               <Markdown
                 className={cn(
                   'prose dark:prose-invert prose-p:leading-relaxed prose-pre:p-0',
@@ -300,9 +318,12 @@ const MessageBox = ({
                         <div className="mb-4"></div> {/* Add this empty div for spacing */}
                       </>
                     )}
+                    {step.requirements.materials.length > 0 && (
+                      <h4 className="text-black dark:text-white font-medium text-xl mt-4">Required tools and materials</h4>
+                    )}
                     {step.requirements.materials.length > 0 && step.requirements.materials.map((material, matIndex) => (
-                      <div key={matIndex} className="flex flex-col space-y-4 mb-4">
-                        <p>{material.name} ({material.quantity} {material.unit})</p>
+                      <div key={matIndex} className="flex flex-col space-y-4 mb-6">
+                        <p className="font-medium text-lg">{matIndex + 1}. {material.name} ({material.quantity} {material.unit})</p>
                         {material.recommended && material.recommended.length > 0 && (
                           <div className="flex flex-col space-y-2">
                             {material.recommended.map((item, itemIndex) => (
@@ -326,11 +347,29 @@ const MessageBox = ({
                             ))}
                           </div>
                         )}
+                        <div
+                          className="flex justify-between items-center cursor-pointer"
+                          onClick={() => toggleReason(matIndex)}
+                        >
+                          <h4 className="text-black dark:text-white text-lg">
+                            Why do you need?
+                          </h4>
+                          {collapsedReasons[matIndex] ? (
+                            <ChevronDown size={20} />
+                          ) : (
+                            <ChevronUp size={20} />
+                          )}
+                        </div>
+                        {!collapsedReasons[matIndex] && (
+                          <ul className="list-disc pl-5">
+                            {formatReason(material.reason)}
+                          </ul>
+                        )}
                       </div>
                     ))}
                     {step.requirements.tools.length > 0 && step.requirements.tools.map((tool, toolIndex) => (
-                      <div key={toolIndex} className="flex flex-col space-y-4 mb-4">
-                        <p>{tool.name} ({tool.quantity} {tool.unit})</p>
+                      <div key={toolIndex} className="flex flex-col space-y-4 mb-6">
+                        <p className="font-medium text-lg">{toolIndex + 1}. {tool.name} ({tool.quantity} {tool.unit})</p>
                         {tool.recommended && tool.recommended.length > 0 && (
                           <div className="flex flex-col space-y-2">
                             {tool.recommended.map((item, itemIndex) => (
@@ -353,6 +392,24 @@ const MessageBox = ({
                               </div>
                             ))}
                           </div>
+                        )}
+                        <div
+                          className="flex justify-between items-center cursor-pointer"
+                          onClick={() => toggleReason(toolIndex)}
+                        >
+                          <h4 className="text-black dark:text-white text-lg">
+                            Why do you need?
+                          </h4>
+                          {collapsedReasons[toolIndex] ? (
+                            <ChevronDown size={20} />
+                          ) : (
+                            <ChevronUp size={20} />
+                          )}
+                        </div>
+                        {!collapsedReasons[toolIndex] && (
+                          <ul className="list-disc pl-5">
+                            {formatReason(tool.reason)}
+                          </ul>
                         )}
                       </div>
                     ))}
