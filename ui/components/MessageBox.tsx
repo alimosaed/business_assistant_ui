@@ -153,7 +153,7 @@ const MessageBox = ({
 
   const formatReason = (reason: string[]) => {
     return reason.map((line, index) => (
-      <li key={index} className="text-sm text-gray-500 mt-2">
+      <li key={index} className="text-base text-gray-500 mt-2">
         {line}
       </li>
     ));
@@ -163,7 +163,7 @@ const MessageBox = ({
     <div>
       {message.role === 'user' && (
         <div className={cn('w-full', messageIndex === 0 ? 'pt-16' : 'pt-8')}>
-          <h3 className="text-black dark:text-white font-medium text-2xl lg:w-9/12">
+          <h3 className="text-black dark:text-white text-base lg:w-9/12">
             {message.content}
           </h3>
         </div>
@@ -202,7 +202,7 @@ const MessageBox = ({
               <Markdown
                 className={cn(
                   'prose dark:prose-invert prose-p:leading-relaxed prose-pre:p-0',
-                  'max-w-none break-words text-black dark:text-white text-sm md:text-base font-medium',
+                  'max-w-none break-words text-black dark:text-white text-base',
                 )}
               >
                 {parsedMessage}
@@ -239,7 +239,7 @@ const MessageBox = ({
               {isLast &&
                 message.suggestions &&
                 message.suggestions.length > 0 &&
-                message.role === 'assistant' &&
+                (message.role === 'assistant') &&
                 !loading && (
                   <>
                     <div className="h-px w-full bg-light-secondary dark:bg-dark-secondary" />
@@ -289,7 +289,7 @@ const MessageBox = ({
                   className="flex justify-between items-center cursor-pointer"
                   onClick={() => toggleStep(index)}
                 >
-                  <h3 className="text-black dark:text-white font-medium text-xl">
+                  <h3 className="text-black dark:text-white font-bold text-lg">
                     Step {step.step_number}: {step.description}
                   </h3>
                   {collapsedSteps[index] ? (
@@ -301,7 +301,7 @@ const MessageBox = ({
                 {!collapsedSteps[index] && (
                   <div className="mt-2 text-black dark:text-white">
                     {step.details && (
-                      <p className="text-sm text-gray-500 mt-2">{step.details}</p>
+                      <p className="text-base text-gray-500 mt-2">{step.details}</p>
                     )}
                     {step.video && (
                       <>
@@ -319,11 +319,11 @@ const MessageBox = ({
                       </>
                     )}
                     {step.requirements.materials.length > 0 && (
-                      <h4 className="text-black dark:text-white font-medium text-xl mt-4">Required tools and materials</h4>
+                      <h4 className="text-black dark:text-white font-medium text-lg mt-4">Required tools and materials</h4>
                     )}
                     {step.requirements.materials.length > 0 && step.requirements.materials.map((material, matIndex) => (
                       <div key={matIndex} className="flex flex-col space-y-4 mb-6">
-                        <p className="font-medium text-lg">{matIndex + 1}. {material.name} ({material.quantity} {material.unit})</p>
+                        <p className="font-medium text-base">{matIndex + 1}. {material.name} ({material.quantity} {material.unit})</p>
                         {material.recommended && material.recommended.length > 0 && (
                           <div className="flex flex-col space-y-2">
                             {material.recommended.map((item, itemIndex) => (
@@ -351,7 +351,7 @@ const MessageBox = ({
                           className="flex justify-between items-center cursor-pointer"
                           onClick={() => toggleReason(matIndex)}
                         >
-                          <h4 className="text-black dark:text-white text-lg">
+                          <h4 className="text-black dark:text-white text-base">
                             Why do you need?
                           </h4>
                           {collapsedReasons[matIndex] ? (
@@ -369,7 +369,7 @@ const MessageBox = ({
                     ))}
                     {step.requirements.tools.length > 0 && step.requirements.tools.map((tool, toolIndex) => (
                       <div key={toolIndex} className="flex flex-col space-y-4 mb-6">
-                        <p className="font-medium text-lg">{toolIndex + 1}. {tool.name} ({tool.quantity} {tool.unit})</p>
+                        <p className="font-medium text-base">{toolIndex + 1}. {tool.name} ({tool.quantity} {tool.unit})</p>
                         {tool.recommended && tool.recommended.length > 0 && (
                           <div className="flex flex-col space-y-2">
                             {tool.recommended.map((item, itemIndex) => (
@@ -397,7 +397,7 @@ const MessageBox = ({
                           className="flex justify-between items-center cursor-pointer"
                           onClick={() => toggleReason(toolIndex)}
                         >
-                          <h4 className="text-black dark:text-white text-lg">
+                          <h4 className="text-black dark:text-white text-base">
                             Why do you need?
                           </h4>
                           {collapsedReasons[toolIndex] ? (
