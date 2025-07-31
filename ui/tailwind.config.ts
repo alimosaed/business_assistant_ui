@@ -37,11 +37,23 @@ const config: Config = {
             primary: colorsDark[50],
             secondary: colorsDark[100],
             ...colorsDark,
+            blue: {
+              500: '#0A84FF',
+            },
+            green: {
+              500: '#34C759', // Dark mode green
+            },
           },
           light: {
             primary: colorsLight[50],
             secondary: colorsLight[100],
             ...colorsLight,
+          },
+          blue: {
+            500: '#007AFF', // Apple's standard blue
+          },
+          green: {
+            500: '#4CD964', // Light mode green
           },
         };
       },
