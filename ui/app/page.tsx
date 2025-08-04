@@ -1,6 +1,5 @@
-import ChatWindow from '@/components/ChatWindow';
+import HomeComponent from '@/components/Home';
 import { Metadata } from 'next';
-import { Suspense } from 'react';
 
 export const metadata: Metadata = {
   title: 'Bixpod',
@@ -8,13 +7,7 @@ export const metadata: Metadata = {
 };
 
 const Home = () => {
-  return (
-    <div>
-      <Suspense>
-        <ChatWindow />
-      </Suspense>
-    </div>
-  );
+  return <HomeComponent />;
 };
 
 export default Home;

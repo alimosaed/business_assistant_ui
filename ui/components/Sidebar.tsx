@@ -1,12 +1,13 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { BookOpenText, Home, Search, SquarePen, Settings } from 'lucide-react';
+import { BookOpenText, Home, Search, SquarePen, Settings, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { useSelectedLayoutSegments } from 'next/navigation';
 import React, { useState, type ReactNode } from 'react';
 import Layout from './Layout';
 import SettingsDialog from './SettingsDialog';
+import { useAuth } from '@/lib/AuthContext';
 
 const VerticalIconContainer = ({ children }: { children: ReactNode }) => {
   return (
@@ -16,7 +17,7 @@ const VerticalIconContainer = ({ children }: { children: ReactNode }) => {
 
 const Sidebar = ({ children }: { children: React.ReactNode }) => {
   const segments = useSelectedLayoutSegments();
-
+  const { logout } = useAuth();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const navLinks = [
@@ -67,10 +68,16 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
             ))}
           </VerticalIconContainer>
 
-          <Settings
-            onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-            className="cursor-pointer"
-          />
+          <div className="flex flex-col items-center gap-y-3 w-full">
+            <Settings
+              onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+              className="cursor-pointer"
+            />
+            <LogOut
+              onClick={logout}
+              className="cursor-pointer"
+            />
+          </div>
 
           <SettingsDialog
             isOpen={isSettingsOpen}

@@ -9,6 +9,7 @@ interface Config {
     PORT: number;
     SIMILARITY_MEASURE: string;
     KEEP_ALIVE: string;
+    SECRET_KEY: string;
   };
   API_KEYS: {
     OPENAI: string;
@@ -37,6 +38,29 @@ export const getSimilarityMeasure = () =>
   loadConfig().GENERAL.SIMILARITY_MEASURE;
 
 export const getKeepAlive = () => loadConfig().GENERAL.KEEP_ALIVE;
+
+export const getSecretKey = () => {
+  // Try to get from config file first
+  const config = loadConfig();
+  if (config.GENERAL.SECRET_KEY) {
+    return config.GENERAL.SECRET_KEY;
+  }
+  
+  // Fallback to environment variable
+  if (process.env.SECRET_KEY) {
+    return process.env.SECRET_KEY;
+  }
+  
+  // Default fallback (should be replaced in production)
+  return 'default_secret_key_for_development';
+};
+
+// Export config for direct access
+export const config = {
+  get SECRET_KEY() {
+    return getSecretKey();
+  }
+};
 
 export const getOpenaiApiKey = () => loadConfig().API_KEYS.OPENAI;
 

@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { useAuth } from '@/lib/AuthContext';
+import { useEffect, useRef, useState } from 'react';
 import { Document } from '@langchain/core/documents';
 import Navbar from './Navbar';
 import Chat from './Chat';
@@ -17,7 +16,7 @@ export type Message = {
   chatId: string;
   createdAt: Date;
   content: string;
-  role: 'user' | 'assistant' | 'plan' | 'question';
+  role: 'user' | 'assistant';
   suggestions?: string[];
   sources?: Document[];
 };
@@ -34,125 +33,186 @@ const useSocket = (
   setError: (error: boolean) => void,
 ) => {
   const [ws, setWs] = useState<WebSocket | null>(null);
-  const { tokenExpiresAt, refreshToken } = useAuth();
-  
-  // Create a function to establish WebSocket connection
-  const connectWs = useCallback(() => {
-    // Replace OpenAI URL with localhost
-    const wsURL = new URL('ws://localhost:5001/connect');
-    
-    // Get the JWT token from localStorage
-    const token = localStorage.getItem('authToken');
-    
-    // Include the token in the WebSocket URL if available
-    if (token) {
-      wsURL.searchParams.append('token', token);
-    }
-    
-    const newWs = new WebSocket(wsURL.toString());
-    
-    const timeoutId = setTimeout(() => {
-      if (newWs.readyState !== 1) {
-        toast.error(
-          'Failed to connect to local server. Please ensure server is running on port 5001.'
-        );
-      }
-    }, 10000);
-    
-    newWs.addEventListener('message', (e) => {
-      const data = JSON.parse(e.data);
-      if (data.type === 'signal' && data.data === 'open') {
-        // After receiving the open signal, send auth message with token as fallback
-        const token = localStorage.getItem('authToken');
-        if (token) {
-          newWs.send(JSON.stringify({
-            type: 'auth',
-            token: token
-          }));
-        }
-        
-        const interval = setInterval(() => {
-          if (newWs.readyState === 1) {
-            setIsWSReady(true);
-            clearInterval(interval);
-          }
-        }, 5);
-        clearTimeout(timeoutId);
-        console.log('[DEBUG] Connected to local server');
-      }
-      if (data.type === 'auth_success') {
-        console.log('[DEBUG] Authentication successful:', data.data);
-      }
-      if (data.type === 'auth_error') {
-        console.error('[DEBUG] Authentication failed:', data.data);
-        toast.error('Authentication failed. Please log in again.');
-      }
-      if (data.type === 'error') {
-        toast.error(data.data);
-      }
-    });
-    
-    newWs.onerror = () => {
-      clearTimeout(timeoutId);
-      setError(true);
-      toast.error('WebSocket connection error - Is local server running?');
-    };
-    
-    newWs.onclose = () => {
-      clearTimeout(timeoutId);
-      setError(true);
-      console.log('[DEBUG] Connection to local server closed');
-    };
-    
-    setWs(newWs);
-  }, [setIsWSReady, setError]);
-  
-  // Effect to establish connection
+
   useEffect(() => {
     if (!ws) {
+      const connectWs = async () => {
+        let chatModel = localStorage.getItem('chatModel');
+        let chatModelProvider = localStorage.getItem('chatModelProvider');
+        let embeddingModel = localStorage.getItem('embeddingModel');
+        let embeddingModelProvider = localStorage.getItem(
+          'embeddingModelProvider',
+        );
+
+        const providers = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/models`,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          },
+        ).then(async (res) => await res.json());
+
+        if (
+          !chatModel ||
+          !chatModelProvider ||
+          !embeddingModel ||
+          !embeddingModelProvider
+        ) {
+          if (!chatModel || !chatModelProvider) {
+            const chatModelProviders = providers.chatModelProviders;
+
+            chatModelProvider = Object.keys(chatModelProviders)[0];
+
+            if (chatModelProvider === 'custom_openai') {
+              toast.error(
+                'Seems like you are using the custom OpenAI provider, please open the settings and configure the API key and base URL',
+              );
+              setError(true);
+              return;
+            } else {
+              chatModel = Object.keys(chatModelProviders[chatModelProvider])[0];
+              if (
+                !chatModelProviders ||
+                Object.keys(chatModelProviders).length === 0
+              )
+                return toast.error('No chat models available');
+            }
+          }
+
+          if (!embeddingModel || !embeddingModelProvider) {
+            const embeddingModelProviders = providers.embeddingModelProviders;
+
+            if (
+              !embeddingModelProviders ||
+              Object.keys(embeddingModelProviders).length === 0
+            )
+              return toast.error('No embedding models available');
+
+            embeddingModelProvider = Object.keys(embeddingModelProviders)[0];
+            embeddingModel = Object.keys(
+              embeddingModelProviders[embeddingModelProvider],
+            )[0];
+          }
+
+          localStorage.setItem('chatModel', chatModel!);
+          localStorage.setItem('chatModelProvider', chatModelProvider);
+          localStorage.setItem('embeddingModel', embeddingModel!);
+          localStorage.setItem(
+            'embeddingModelProvider',
+            embeddingModelProvider,
+          );
+        } else {
+          const chatModelProviders = providers.chatModelProviders;
+          const embeddingModelProviders = providers.embeddingModelProviders;
+
+          if (
+            Object.keys(chatModelProviders).length > 0 &&
+            !chatModelProviders[chatModelProvider]
+          ) {
+            chatModelProvider = Object.keys(chatModelProviders)[0];
+            localStorage.setItem('chatModelProvider', chatModelProvider);
+          }
+
+          if (
+            chatModelProvider &&
+            chatModelProvider != 'custom_openai' &&
+            !chatModelProviders[chatModelProvider][chatModel]
+          ) {
+            chatModel = Object.keys(chatModelProviders[chatModelProvider])[0];
+            localStorage.setItem('chatModel', chatModel);
+          }
+
+          if (
+            Object.keys(embeddingModelProviders).length > 0 &&
+            !embeddingModelProviders[embeddingModelProvider]
+          ) {
+            embeddingModelProvider = Object.keys(embeddingModelProviders)[0];
+            localStorage.setItem(
+              'embeddingModelProvider',
+              embeddingModelProvider,
+            );
+          }
+
+          if (
+            embeddingModelProvider &&
+            !embeddingModelProviders[embeddingModelProvider][embeddingModel]
+          ) {
+            embeddingModel = Object.keys(
+              embeddingModelProviders[embeddingModelProvider],
+            )[0];
+            localStorage.setItem('embeddingModel', embeddingModel);
+          }
+        }
+
+        const wsURL = new URL(url);
+        const searchParams = new URLSearchParams({});
+
+        searchParams.append('chatModel', chatModel!);
+        searchParams.append('chatModelProvider', chatModelProvider);
+
+        if (chatModelProvider === 'custom_openai') {
+          searchParams.append(
+            'openAIApiKey',
+            localStorage.getItem('openAIApiKey')!,
+          );
+          searchParams.append(
+            'openAIBaseURL',
+            localStorage.getItem('openAIBaseURL')!,
+          );
+        }
+
+        searchParams.append('embeddingModel', embeddingModel!);
+        searchParams.append('embeddingModelProvider', embeddingModelProvider);
+
+        wsURL.search = searchParams.toString();
+
+        const ws = new WebSocket(wsURL.toString());
+
+        const timeoutId = setTimeout(() => {
+          if (ws.readyState !== 1) {
+            toast.error(
+              'Failed to connect to the server. Please try again later.',
+            );
+          }
+        }, 10000);
+
+        ws.addEventListener('message', (e) => {
+          const data = JSON.parse(e.data);
+          if (data.type === 'signal' && data.data === 'open') {
+            const interval = setInterval(() => {
+              if (ws.readyState === 1) {
+                setIsWSReady(true);
+                clearInterval(interval);
+              }
+            }, 5);
+            clearTimeout(timeoutId);
+            console.log('[DEBUG] opened');
+          }
+          if (data.type === 'error') {
+            toast.error(data.data);
+          }
+        });
+
+        ws.onerror = () => {
+          clearTimeout(timeoutId);
+          setError(true);
+          toast.error('WebSocket connection error.');
+        };
+
+        ws.onclose = () => {
+          clearTimeout(timeoutId);
+          setError(true);
+          console.log('[DEBUG] closed');
+        };
+
+        setWs(ws);
+      };
+
       connectWs();
     }
-    
-    // Handle token expiration
-    if (tokenExpiresAt) {
-      const tokenExpirationTime = tokenExpiresAt;
-      const currentTime = Date.now();
-      
-      // If token is about to expire in the next 5 minutes, set up a timer to reconnect
-      if (tokenExpirationTime - currentTime < 300000 && tokenExpirationTime > currentTime) {
-        const timeUntilExpiration = tokenExpirationTime - currentTime;
-        
-        const reconnectTimer = setTimeout(async () => {
-          console.log('Token about to expire, attempting to refresh');
-          
-          // Close existing connection
-          if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.close();
-          }
-          
-          // Try to refresh token
-          const success = await refreshToken();
-          
-          // If token refresh was successful, reconnect
-          if (success) {
-            setWs(null); // This will trigger reconnection in the next render
-          } else {
-            setError(true);
-          }
-        }, timeUntilExpiration - 10000); // Reconnect 10 seconds before expiration
-        
-        return () => clearTimeout(reconnectTimer);
-      }
-    }
-    
-    // Cleanup function
-    return () => {
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.close();
-      }
-    };
-  }, [ws, tokenExpiresAt, refreshToken, connectWs, setError]);
-  
+  }, [ws, url, setIsWSReady, setError]);
+
   return ws;
 };
 
@@ -199,9 +259,7 @@ const loadMessages = async (
 
   console.log('[DEBUG] messages loaded');
 
-  if (typeof messages[0].content === 'string') {
-    document.title = messages[0].content;
-  }
+  document.title = messages[0].content;
 
   const files = data.chat.files.map((file: any) => {
     return {
@@ -277,6 +335,16 @@ const ChatWindow = ({ id }: { id?: string }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (ws?.readyState === 1) {
+        ws.close();
+        console.log('[DEBUG] closed');
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const messagesRef = useRef<Message[]>([]);
 
   useEffect(() => {
@@ -301,9 +369,6 @@ const ChatWindow = ({ id }: { id?: string }) => {
     let added = false;
 
     messageId = messageId ?? crypto.randomBytes(7).toString('hex');
-    
-    // Get the JWT token
-    const token = localStorage.getItem('authToken');
 
     ws?.send(
       JSON.stringify({
@@ -312,13 +377,11 @@ const ChatWindow = ({ id }: { id?: string }) => {
           messageId: messageId,
           chatId: chatId!,
           content: message,
-          token: token, // Include token in the message
         },
         files: fileIds,
         focusMode: focusMode,
         optimizationMode: optimizationMode,
         history: [...chatHistory, ['human', message]],
-        token: token, // Also include at top level for flexibility
       }),
     );
 
@@ -326,7 +389,7 @@ const ChatWindow = ({ id }: { id?: string }) => {
       ...prevMessages,
       {
         content: message,
-        messageId: messageId!,
+        messageId: messageId,
         chatId: chatId!,
         role: 'user',
         createdAt: new Date(),
@@ -375,17 +438,17 @@ const ChatWindow = ({ id }: { id?: string }) => {
             },
           ]);
           added = true;
-        } else {
-          setMessages((prev) =>
-            prev.map((message) => {
-              if (message.messageId === data.messageId) {
-                return { ...message, content: message.content + data.data };
-              }
-
-              return message;
-            }),
-          );
         }
+
+        setMessages((prev) =>
+          prev.map((message) => {
+            if (message.messageId === data.messageId) {
+              return { ...message, content: message.content + data.data };
+            }
+
+            return message;
+          }),
+        );
 
         recievedMessage += data.data;
         setMessageAppeared(true);
@@ -420,94 +483,6 @@ const ChatWindow = ({ id }: { id?: string }) => {
           );
         }
       }
-
-      // question & answer
-      if (data.type === 'question') {
-        if (!added) {
-          setMessages((prevMessages) => [
-            ...prevMessages,
-            {
-              content: data.data,
-              messageId: data.messageId,
-              chatId: chatId!,
-              role: 'question',
-              sources: sources,
-              createdAt: new Date(),
-            },
-          ]);
-          added = true;
-        } else {
-          setMessages((prev) =>
-            prev.map((message) => {
-              if (message.messageId === data.messageId) {
-                return { ...message, content: message.content + data.data };
-              }
-
-              return message;
-            }),
-          );
-        }
-
-        recievedMessage += data.data;
-        setMessageAppeared(true);
-      }
-
-      if (data.type === 'questionEnd') {
-        setChatHistory((prevHistory) => [
-          ...prevHistory,
-          ['human', message],
-          ['assistant', recievedMessage],
-        ]);
-
-        ws?.removeEventListener('message', messageHandler);
-        setLoading(false);
-
-        const lastMsg = messagesRef.current[messagesRef.current.length - 1];
-
-        if (
-          lastMsg.role === 'assistant' &&
-          lastMsg.sources &&
-          lastMsg.sources.length > 0 &&
-          !lastMsg.suggestions
-        ) {
-          const suggestions = await getSuggestions(messagesRef.current);
-          setMessages((prev) =>
-            prev.map((msg) => {
-              if (msg.messageId === lastMsg.messageId) {
-                return { ...msg, suggestions: suggestions };
-              }
-              return msg;
-            }),
-          );
-        }
-      }
-
-      // plan
-      if (data.type === 'plan') {
-        try {
-          const plan = data.data.toString();
-          if (!added) {
-            setMessages((prevMessages) => [
-              ...prevMessages,
-              {
-                content: plan,
-                messageId: data.messageId,
-                chatId: chatId!,
-                role: 'plan',
-                sources: sources,
-                createdAt: new Date(),
-              },
-            ]);
-            added = true;
-          }
-
-          recievedMessage += data.data;
-          setMessageAppeared(true);
-        } catch (error) {
-          console.error('Failed to parse plan JSON:', error);
-          toast.error('Failed to parse plan data.');
-        }
-      }
     };
 
     ws?.addEventListener('message', messageHandler);
@@ -527,9 +502,7 @@ const ChatWindow = ({ id }: { id?: string }) => {
       return [...prev.slice(0, messages.length > 2 ? index - 1 : 0)];
     });
 
-    if (typeof message.content === 'string') {
-      sendMessage(message.content, message.messageId);
-    }
+    sendMessage(message.content, message.messageId);
   };
 
   useEffect(() => {
