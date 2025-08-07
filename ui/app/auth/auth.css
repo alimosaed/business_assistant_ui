@@ -40,3 +40,14 @@
 .oauth-button:hover {
   background-color: #0056b3;
 }
+
+.logo-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.logo-image {
+  border-radius: 50%;
+  object-fit: cover;
+}
