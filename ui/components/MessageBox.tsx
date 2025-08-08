@@ -153,7 +153,7 @@ const MessageBox = ({
 
   const formatReason = (reason: string[]) => {
     return reason.map((line, index) => (
-      <li key={index} className="text-base text-gray-500 mt-2">
+      <li key={index} className="text-base mt-2">
         {line}
       </li>
     ));
@@ -273,7 +273,7 @@ const MessageBox = ({
       )}
 
       {message.role === 'plan' && (
-        <div className="bg-light-purple-500 dark:bg-dark-purple-500 text-purple-900 dark:text-white p-4 rounded-lg">
+        <div className="bg-light-green-500 dark:bg-dark-green-500 text-green-900 dark:text-green-100 p-4 rounded-lg">
           <div className="flex flex-col space-y-6 w-full">
             <div className="flex flex-col space-y-4">
               {steps.map((step, index) => (
@@ -282,7 +282,7 @@ const MessageBox = ({
                     className="flex justify-between items-center cursor-pointer"
                     onClick={() => toggleStep(index)}
                   >
-                    <h3 className="text-black font-bold text-lg">
+                    <h3 className="font-bold text-lg">
                       Step {step.step_number}: {step.description}
                     </h3>
                     {collapsedSteps[index] ? (
@@ -292,9 +292,9 @@ const MessageBox = ({
                     )}
                   </div>
                   {!collapsedSteps[index] && (
-                    <div className="mt-2 text-white">
+                    <div className="mt-2">
                       {step.details && (
-                        <p className="text-base text-gray-200 mt-2">{step.details}</p>
+                        <p className="text-base mt-2">{step.details}</p>
                       )}
                       {step.video && (
                         <>
@@ -314,7 +314,7 @@ const MessageBox = ({
                         </>
                       )}
                       {step.requirements.materials.length > 0 && (
-                        <h4 className="text-white font-medium text-lg mt-4">
+                        <h4 className="font-medium text-lg mt-4">
                           Required tools and materials
                         </h4>
                       )}
@@ -355,7 +355,7 @@ const MessageBox = ({
                                             href={item.detail_page_url}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-blue-300 hover:underline"
+                                            className="text-blue-500 dark:text-blue-400 hover:underline"
                                           >
                                             {item.title}
                                           </a>
@@ -373,7 +373,7 @@ const MessageBox = ({
                               className="flex justify-between items-center cursor-pointer"
                               onClick={() => toggleReason(matIndex)}
                             >
-                              <h4 className="text-white text-base">
+                              <h4 className="text-base">
                                 Why do you need?
                               </h4>
                               {collapsedReasons[matIndex] ? (
@@ -426,7 +426,7 @@ const MessageBox = ({
                                             href={item.detail_page_url}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-blue-300 hover:underline"
+                                            className="text-blue-500 dark:text-blue-400 hover:underline"
                                           >
                                             {item.title}
                                           </a>
@@ -444,7 +444,7 @@ const MessageBox = ({
                               className="flex justify-between items-center cursor-pointer"
                               onClick={() => toggleReason(toolIndex)}
                             >
-                              <h4 className="text-white text-base">
+                              <h4 className="text-base">
                                 Why do you need?
                               </h4>
                               {collapsedReasons[toolIndex] ? (

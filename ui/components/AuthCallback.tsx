@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 import Image from 'next/image';
-import logoImage from '@/components/assets/logo.jpg';
+import logoImage from '@/components/assets/logo.png';
 
 const AuthCallback = () => {
   const router = useRouter();
