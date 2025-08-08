@@ -176,7 +176,7 @@ const MessageBox = ({
 
       {(message.role === 'assistant' || message.role === 'question') && (
         <div className="flex flex-col space-y-9 w-full">
-          <div className="bg-green-500 text-white p-4 rounded-2xl">
+          <div className="bg-light-green-500 dark:bg-dark-green-500 text-green-900 dark:text-green-100 p-4 rounded-2xl">
             <div
               ref={dividerRef}
               className="flex flex-col space-y-6 w-full"
@@ -196,7 +196,7 @@ const MessageBox = ({
                 <Markdown
                   className={cn(
                     'prose dark:prose-invert prose-p:leading-relaxed prose-pre:p-0',
-                    'max-w-none break-words text-black text-base',
+                    'max-w-none break-words text-green-900 dark:text-green-100 text-base',
                   )}
                 >
                   {parsedMessage}
@@ -273,7 +273,7 @@ const MessageBox = ({
       )}
 
       {message.role === 'plan' && (
-        <div className="bg-red-500 text-black p-4 rounded-lg">
+        <div className="bg-light-purple-500 dark:bg-dark-purple-500 text-purple-900 dark:text-white p-4 rounded-lg">
           <div className="flex flex-col space-y-6 w-full">
             <div className="flex flex-col space-y-4">
               {steps.map((step, index) => (

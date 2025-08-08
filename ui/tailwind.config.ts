@@ -41,19 +41,25 @@ const config: Config = {
               500: '#0A84FF',
             },
             green: {
-              500: '#34C759', // Dark mode green
+              500: '#104F46', // Dark mode green
+            },
+            purple: {
+              500: '#3B235A', // Dark mode purple
             },
           },
           light: {
             primary: colorsLight[50],
             secondary: colorsLight[100],
             ...colorsLight,
+            green: {
+              500: '#D1FAE5', // Light mode green
+            },
+            purple: {
+              500: '#E9D5FF', // Light mode purple
+            },
           },
           blue: {
             500: '#007AFF', // Apple's standard blue
-          },
-          green: {
-            500: '#4CD964', // Light mode green
           },
         };
       },
