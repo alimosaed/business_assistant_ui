@@ -113,45 +113,47 @@ const useSocket = (
       connectWs();
     }
     
-    // Handle token expiration
-    if (tokenExpiresAt) {
-      const tokenExpirationTime = tokenExpiresAt;
-      const currentTime = Date.now();
-      
-      // If token is about to expire in the next 5 minutes, set up a timer to reconnect
-      if (tokenExpirationTime - currentTime < 300000 && tokenExpirationTime > currentTime) {
-        const timeUntilExpiration = tokenExpirationTime - currentTime;
-        
-        const reconnectTimer = setTimeout(async () => {
-          console.log('Token about to expire, attempting to refresh');
-          
-          // Close existing connection
-          if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.close();
-          }
-          
-          // Try to refresh token
-          const success = await refreshToken();
-          
-          // If token refresh was successful, reconnect
-          if (success) {
-            setWs(null); // This will trigger reconnection in the next render
-          } else {
-            setError(true);
-          }
-        }, timeUntilExpiration - 10000); // Reconnect 10 seconds before expiration
-        
-        return () => clearTimeout(reconnectTimer);
-      }
-    }
-    
     // Cleanup function
     return () => {
       if (ws && ws.readyState === WebSocket.OPEN) {
         ws.close();
       }
     };
-  }, [ws, tokenExpiresAt, refreshToken, connectWs, setError]);
+  }, [ws, connectWs]);
+  
+  // Separate effect for token expiration handling
+  useEffect(() => {
+    if (!ws || !tokenExpiresAt) return;
+    
+    const tokenExpirationTime = tokenExpiresAt;
+    const currentTime = Date.now();
+    
+    // If token is about to expire in the next 5 minutes, set up a timer to reconnect
+    if (tokenExpirationTime - currentTime < 300000 && tokenExpirationTime > currentTime) {
+      const timeUntilExpiration = tokenExpirationTime - currentTime;
+      
+      const reconnectTimer = setTimeout(async () => {
+        console.log('Token about to expire, attempting to refresh');
+        
+        // Close existing connection
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.close();
+        }
+        
+        // Try to refresh token
+        const success = await refreshToken();
+        
+        // If token refresh was successful, reconnect
+        if (success) {
+          setWs(null); // This will trigger reconnection in the next render
+        } else {
+          setError(true);
+        }
+      }, timeUntilExpiration - 10000); // Reconnect 10 seconds before expiration
+      
+      return () => clearTimeout(reconnectTimer);
+    }
+  }, [ws, tokenExpiresAt, refreshToken, setError]);
   
   return ws;
 };
