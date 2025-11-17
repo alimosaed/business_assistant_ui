@@ -278,7 +278,7 @@ const MessageBox = ({
       )}
 
       {message.role === 'plan' && (
-        <div className="bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 p-4 rounded-2xl max-w-[95%]">
+        <div ref={dividerRef} className="bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 p-4 rounded-2xl max-w-[95%]">
           <div className="flex flex-col space-y-4 w-full">
             {steps.map((step, index) => (
               <div key={index} className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">

@@ -510,6 +510,17 @@ const ChatWindow = ({ id }: { id?: string }) => {
           toast.error('Failed to parse plan data.');
         }
       }
+
+      if (data.type === 'planEnd') {
+        setChatHistory((prevHistory) => [
+          ...prevHistory,
+          ['human', message],
+          ['assistant', recievedMessage],
+        ]);
+
+        ws?.removeEventListener('message', messageHandler);
+        setLoading(false);
+      }
     };
 
     ws?.addEventListener('message', messageHandler);
