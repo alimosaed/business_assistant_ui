@@ -187,9 +187,16 @@ const loadMessages = async (
   const data = await res.json();
 
   const messages = data.messages.map((msg: any) => {
+    // Handle metadata whether it's a string or already an object
+    const metadata = typeof msg.metadata === 'string'
+      ? JSON.parse(msg.metadata)
+      : (msg.metadata || {});
+    
     return {
       ...msg,
-      ...JSON.parse(msg.metadata),
+      ...metadata,
+      // Ensure createdAt is a Date object
+      createdAt: metadata.createdAt ? new Date(metadata.createdAt) : new Date(),
     };
   }) as Message[];
 
