@@ -163,7 +163,7 @@ const loadMessages = async (
   setMessages: (messages: Message[]) => void,
   setIsMessagesLoaded: (loaded: boolean) => void,
   setChatHistory: (history: [string, string][]) => void,
-  setFocusMode: (mode: string) => void,
+  // setFocusMode: (mode: string) => void,
   setNotFound: (notFound: boolean) => void,
   setFiles: (files: File[]) => void,
   setFileIds: (fileIds: string[]) => void,
@@ -224,7 +224,7 @@ const loadMessages = async (
   setFileIds(files.map((file: File) => file.fileId));
 
   setChatHistory(history);
-  setFocusMode(data.chat.focusMode);
+  // setFocusMode(data.chat.focusMode);
   setIsMessagesLoaded(true);
 };
 
@@ -254,8 +254,8 @@ const ChatWindow = ({ id }: { id?: string }) => {
   const [files, setFiles] = useState<File[]>([]);
   const [fileIds, setFileIds] = useState<string[]>([]);
 
-  const [focusMode, setFocusMode] = useState('webSearch');
-  const [optimizationMode, setOptimizationMode] = useState('speed');
+  // const [focusMode, setFocusMode] = useState('webSearch');
+  // const [optimizationMode, setOptimizationMode] = useState('speed');
 
   const [isMessagesLoaded, setIsMessagesLoaded] = useState(false);
 
@@ -273,7 +273,7 @@ const ChatWindow = ({ id }: { id?: string }) => {
         setMessages,
         setIsMessagesLoaded,
         setChatHistory,
-        setFocusMode,
+        // setFocusMode,
         setNotFound,
         setFiles,
         setFileIds,
@@ -324,8 +324,8 @@ const ChatWindow = ({ id }: { id?: string }) => {
           token: token, // Include token in the message
         },
         files: fileIds,
-        focusMode: focusMode,
-        optimizationMode: optimizationMode,
+        // focusMode: focusMode,
+        // optimizationMode: optimizationMode,
         history: [...chatHistory, ['human', message]],
         token: token, // Also include at top level for flexibility
       }),
@@ -592,10 +592,10 @@ const ChatWindow = ({ id }: { id?: string }) => {
         ) : (
           <EmptyChat
             sendMessage={sendMessage}
-            focusMode={focusMode}
-            setFocusMode={setFocusMode}
-            optimizationMode={optimizationMode}
-            setOptimizationMode={setOptimizationMode}
+            // focusMode={focusMode}
+            // setFocusMode={setFocusMode}
+            // optimizationMode={optimizationMode}
+            // setOptimizationMode={setOptimizationMode}
             fileIds={fileIds}
             setFileIds={setFileIds}
             files={files}
