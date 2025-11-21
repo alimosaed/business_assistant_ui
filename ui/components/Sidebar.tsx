@@ -16,7 +16,15 @@ const VerticalIconContainer = ({ children }: { children: ReactNode }) => {
   );
 };
 
-const Sidebar = ({ children }: { children: React.ReactNode }) => {
+const Sidebar = ({
+  children,
+  selectedChatId,
+  setSelectedChatId,
+}: {
+  children: React.ReactNode;
+  selectedChatId?: string;
+  setSelectedChatId?: (chatId: string | undefined) => void;
+}) => {
   const segments = useSelectedLayoutSegments();
   const { logout } = useAuth();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -93,6 +101,7 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
           <LibraryPanel
             isOpen={isLibraryOpen}
             setIsOpen={setIsLibraryOpen}
+            setSelectedChatId={setSelectedChatId}
           />
         </div>
       </div>

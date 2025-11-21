@@ -280,6 +280,32 @@ const ChatWindow = ({ id }: { id?: string }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Effect to handle chat ID changes from library selection
+  useEffect(() => {
+    if (id && id !== chatId) {
+      // Reset state for new chat
+      setMessages([]);
+      setChatHistory([]);
+      setFiles([]);
+      setFileIds([]);
+      setIsMessagesLoaded(false);
+      setNewChatCreated(false);
+      setNotFound(false);
+      setChatId(id);
+      
+      // Load the new chat
+      loadMessages(
+        id,
+        setMessages,
+        setIsMessagesLoaded,
+        setChatHistory,
+        setNotFound,
+        setFiles,
+        setFileIds,
+      );
+    }
+  }, [id]);
+
   const messagesRef = useRef<Message[]>([]);
 
   useEffect(() => {

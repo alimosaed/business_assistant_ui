@@ -8,7 +8,7 @@ import {
   TransitionChild,
 } from '@headlessui/react';
 import { BookOpenText, ClockIcon, X } from 'lucide-react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Fragment, useEffect, useState } from 'react';
 import { apiGet } from '@/lib/api';
 import DeleteChat from './DeleteChat';
@@ -23,10 +23,13 @@ export interface Chat {
 const LibraryPanel = ({
   isOpen,
   setIsOpen,
+  setSelectedChatId,
 }: {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
+  setSelectedChatId?: (chatId: string | undefined) => void;
 }) => {
+  const router = useRouter();
   const [chats, setChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -141,13 +144,19 @@ const LibraryPanel = ({
                               )}
                               key={chat.id}
                             >
-                              <Link
-                                href={`/c/${chat.id}`}
-                                onClick={() => setIsOpen(false)}
-                                className="text-black dark:text-white font-medium truncate transition duration-200 hover:text-[#24A0ED] dark:hover:text-[#24A0ED] cursor-pointer"
+                              <button
+                                onClick={() => {
+                                  if (setSelectedChatId) {
+                                    setSelectedChatId(chat.id);
+                                  } else {
+                                    router.push(`/c/${chat.id}`);
+                                  }
+                                  setIsOpen(false);
+                                }}
+                                className="text-left text-black dark:text-white font-medium truncate transition duration-200 hover:text-[#24A0ED] dark:hover:text-[#24A0ED] cursor-pointer"
                               >
                                 {chat.title}
-                              </Link>
+                              </button>
                               <div className="flex flex-row items-center justify-between w-full">
                                 <div className="flex flex-row items-center space-x-1.5 text-black/70 dark:text-white/70">
                                   <ClockIcon size={14} />

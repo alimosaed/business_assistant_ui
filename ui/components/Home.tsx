@@ -1,16 +1,18 @@
 'use client';
 
-import { Suspense } from 'react';
+import { Suspense, useState } from 'react';
 import ChatWindow from '@/components/ChatWindow';
 import withAuth from '@/components/withAuth';
 import Sidebar from './Sidebar';
 
 const Home = () => {
+  const [selectedChatId, setSelectedChatId] = useState<string | undefined>(undefined);
+
   return (
-    <Sidebar>
+    <Sidebar selectedChatId={selectedChatId} setSelectedChatId={setSelectedChatId}>
       <div>
         <Suspense>
-          <ChatWindow />
+          <ChatWindow key={selectedChatId} id={selectedChatId} />
         </Suspense>
       </div>
     </Sidebar>
