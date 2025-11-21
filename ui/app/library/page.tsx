@@ -5,6 +5,7 @@ import { cn, formatTimeDifference } from '@/lib/utils';
 import { BookOpenText, ClockIcon, Delete, ScanEye, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { apiGet } from '@/lib/api';
 
 export interface Chat {
   id: string;
@@ -21,17 +22,18 @@ const Page = () => {
     const fetchChats = async () => {
       setLoading(true);
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/chats`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      try {
+        const data = await apiGet<{ chats: Chat[] }>(
+          `${process.env.NEXT_PUBLIC_API_URL}/chats`
+        );
 
-      const data = await res.json();
-
-      setChats(data.chats);
-      setLoading(false);
+        setChats(data.chats);
+      } catch (error) {
+        console.error('Failed to fetch chats:', error);
+        // Error handling is done in apiGet (redirect to login)
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchChats();

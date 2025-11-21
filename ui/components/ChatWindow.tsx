@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { useSearchParams } from 'next/navigation';
 import { getSuggestions } from '@/lib/actions';
 import Error from 'next/error';
+import { apiGet } from '@/lib/api';
 
 export type Message = {
   messageId: string;
@@ -168,64 +169,57 @@ const loadMessages = async (
   setFiles: (files: File[]) => void,
   setFileIds: (fileIds: string[]) => void,
 ) => {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/chats/${chatId}`,
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    },
-  );
+  try {
+    const data = await apiGet<any>(
+      `${process.env.NEXT_PUBLIC_API_URL}/chats/${chatId}`
+    );
 
-  if (res.status === 404) {
-    setNotFound(true);
+    const messages = data.messages.map((msg: any) => {
+      // Handle metadata whether it's a string or already an object
+      const metadata = typeof msg.metadata === 'string'
+        ? JSON.parse(msg.metadata)
+        : (msg.metadata || {});
+      
+      return {
+        ...msg,
+        ...metadata,
+        // Ensure createdAt is a Date object
+        createdAt: metadata.createdAt ? new Date(metadata.createdAt) : new Date(),
+      };
+    }) as Message[];
+
+    setMessages(messages);
+
+    const history = messages.map((msg) => {
+      return [msg.role, msg.content];
+    }) as [string, string][];
+
+    console.log('[DEBUG] messages loaded');
+
+    if (typeof messages[0].content === 'string') {
+      document.title = messages[0].content;
+    }
+
+    const files = data.chat.files.map((file: any) => {
+      return {
+        fileName: file.name,
+        fileExtension: file.name.split('.').pop(),
+        fileId: file.fileId,
+      };
+    });
+
+    setFiles(files);
+    setFileIds(files.map((file: File) => file.fileId));
+
+    setChatHistory(history);
+    // setFocusMode(data.chat.focusMode);
     setIsMessagesLoaded(true);
-    return;
+  } catch (error: any) {
+    if (error.message === 'API request failed with status 404') {
+      setNotFound(true);
+    }
+    setIsMessagesLoaded(true);
   }
-
-  const data = await res.json();
-
-  const messages = data.messages.map((msg: any) => {
-    // Handle metadata whether it's a string or already an object
-    const metadata = typeof msg.metadata === 'string'
-      ? JSON.parse(msg.metadata)
-      : (msg.metadata || {});
-    
-    return {
-      ...msg,
-      ...metadata,
-      // Ensure createdAt is a Date object
-      createdAt: metadata.createdAt ? new Date(metadata.createdAt) : new Date(),
-    };
-  }) as Message[];
-
-  setMessages(messages);
-
-  const history = messages.map((msg) => {
-    return [msg.role, msg.content];
-  }) as [string, string][];
-
-  console.log('[DEBUG] messages loaded');
-
-  if (typeof messages[0].content === 'string') {
-    document.title = messages[0].content;
-  }
-
-  const files = data.chat.files.map((file: any) => {
-    return {
-      fileName: file.name,
-      fileExtension: file.name.split('.').pop(),
-      fileId: file.fileId,
-    };
-  });
-
-  setFiles(files);
-  setFileIds(files.map((file: File) => file.fileId));
-
-  setChatHistory(history);
-  // setFocusMode(data.chat.focusMode);
-  setIsMessagesLoaded(true);
 };
 
 const ChatWindow = ({ id }: { id?: string }) => {

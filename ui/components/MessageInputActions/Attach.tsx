@@ -8,6 +8,7 @@ import {
 import { CopyPlus, File, LoaderCircle, Plus, Trash } from 'lucide-react';
 import { Fragment, useRef, useState } from 'react';
 import { File as FileType } from '../ChatWindow';
+import { apiRequest } from '@/lib/api';
 
 const Attach = ({
   fileIds,
@@ -41,12 +42,17 @@ const Attach = ({
     data.append('embedding_model_provider', embeddingModelProvider!);
     data.append('embedding_model', embeddingModel!);
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/uploads`, {
-      method: 'POST',
-      body: data,
-    });
-
-    const resData = await res.json();
+    const resData = await apiRequest<{ files: any[] }>(
+      `${process.env.NEXT_PUBLIC_API_URL}/uploads`,
+      {
+        method: 'POST',
+        body: data,
+        headers: {
+          // Don't set Content-Type for FormData, browser will set it with boundary
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+        },
+      }
+    );
 
     setFiles([...files, ...resData.files]);
     setFileIds([...fileIds, ...resData.files.map((file: any) => file.fileId)]);

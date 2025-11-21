@@ -11,6 +11,7 @@ import {
 import { Fragment, useState } from 'react';
 import { toast } from 'sonner';
 import { Chat } from '@/app/library/page';
+import { apiDelete } from '@/lib/api';
 
 const DeleteChat = ({
   chatId,
@@ -29,19 +30,9 @@ const DeleteChat = ({
   const handleDelete = async () => {
     setLoading(true);
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/chats/${chatId}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        },
+      await apiDelete(
+        `${process.env.NEXT_PUBLIC_API_URL}/chats/${chatId}`
       );
-
-      if (res.status != 200) {
-        throw new Error('Failed to delete chat');
-      }
 
       const newChats = chats.filter((chat) => chat.id !== chatId);
 
