@@ -2,9 +2,10 @@
 
 import DeleteChat from '@/components/DeleteChat';
 import { cn, formatTimeDifference } from '@/lib/utils';
-import { BookOpenText, ClockIcon, Delete, ScanEye } from 'lucide-react';
+import { BookOpenText, ClockIcon, Delete, ScanEye, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { apiGet } from '@/lib/api';
 
 export interface Chat {
   id: string;
@@ -21,17 +22,18 @@ const Page = () => {
     const fetchChats = async () => {
       setLoading(true);
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/chats`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      try {
+        const data = await apiGet<{ chats: Chat[] }>(
+          `${process.env.NEXT_PUBLIC_API_URL}/chats`
+        );
 
-      const data = await res.json();
-
-      setChats(data.chats);
-      setLoading(false);
+        setChats(data.chats);
+      } catch (error) {
+        console.error('Failed to fetch chats:', error);
+        // Error handling is done in apiGet (redirect to login)
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchChats();
@@ -58,8 +60,18 @@ const Page = () => {
     </div>
   ) : (
     <div>
-      <div className="flex flex-col pt-4">
-        <div className="flex items-center">
+      <div className="flex flex-col pt-4 pl-4">
+        <div className="flex items-center space-x-2">
+          <Link
+            href="/"
+            className="p-2 rounded-lg hover:bg-light-secondary dark:hover:bg-dark-secondary transition duration-200 group"
+            aria-label="Back to home"
+          >
+            <ArrowLeft
+              className="text-black/70 dark:text-white/70 group-hover:text-black dark:group-hover:text-white transition duration-200"
+              size={24}
+            />
+          </Link>
           <BookOpenText />
           <h1 className="text-3xl font-medium p-2">Library</h1>
         </div>
@@ -73,7 +85,7 @@ const Page = () => {
         </div>
       )}
       {chats.length > 0 && (
-        <div className="flex flex-col pb-20 lg:pb-2">
+        <div className="flex flex-col pb-20 lg:pb-2 pl-4">
           {chats.map((chat, i) => (
             <div
               className={cn(

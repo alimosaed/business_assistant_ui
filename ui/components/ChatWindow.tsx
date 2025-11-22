@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { useSearchParams } from 'next/navigation';
 import { getSuggestions } from '@/lib/actions';
 import Error from 'next/error';
+import { apiGet } from '@/lib/api';
 
 export type Message = {
   messageId: string;
@@ -113,45 +114,47 @@ const useSocket = (
       connectWs();
     }
     
-    // Handle token expiration
-    if (tokenExpiresAt) {
-      const tokenExpirationTime = tokenExpiresAt;
-      const currentTime = Date.now();
-      
-      // If token is about to expire in the next 5 minutes, set up a timer to reconnect
-      if (tokenExpirationTime - currentTime < 300000 && tokenExpirationTime > currentTime) {
-        const timeUntilExpiration = tokenExpirationTime - currentTime;
-        
-        const reconnectTimer = setTimeout(async () => {
-          console.log('Token about to expire, attempting to refresh');
-          
-          // Close existing connection
-          if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.close();
-          }
-          
-          // Try to refresh token
-          const success = await refreshToken();
-          
-          // If token refresh was successful, reconnect
-          if (success) {
-            setWs(null); // This will trigger reconnection in the next render
-          } else {
-            setError(true);
-          }
-        }, timeUntilExpiration - 10000); // Reconnect 10 seconds before expiration
-        
-        return () => clearTimeout(reconnectTimer);
-      }
-    }
-    
     // Cleanup function
     return () => {
       if (ws && ws.readyState === WebSocket.OPEN) {
         ws.close();
       }
     };
-  }, [ws, tokenExpiresAt, refreshToken, connectWs, setError]);
+  }, [ws, connectWs]);
+  
+  // Separate effect for token expiration handling
+  useEffect(() => {
+    if (!ws || !tokenExpiresAt) return;
+    
+    const tokenExpirationTime = tokenExpiresAt;
+    const currentTime = Date.now();
+    
+    // If token is about to expire in the next 5 minutes, set up a timer to reconnect
+    if (tokenExpirationTime - currentTime < 300000 && tokenExpirationTime > currentTime) {
+      const timeUntilExpiration = tokenExpirationTime - currentTime;
+      
+      const reconnectTimer = setTimeout(async () => {
+        console.log('Token about to expire, attempting to refresh');
+        
+        // Close existing connection
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.close();
+        }
+        
+        // Try to refresh token
+        const success = await refreshToken();
+        
+        // If token refresh was successful, reconnect
+        if (success) {
+          setWs(null); // This will trigger reconnection in the next render
+        } else {
+          setError(true);
+        }
+      }, timeUntilExpiration - 10000); // Reconnect 10 seconds before expiration
+      
+      return () => clearTimeout(reconnectTimer);
+    }
+  }, [ws, tokenExpiresAt, refreshToken, setError]);
   
   return ws;
 };
@@ -161,62 +164,62 @@ const loadMessages = async (
   setMessages: (messages: Message[]) => void,
   setIsMessagesLoaded: (loaded: boolean) => void,
   setChatHistory: (history: [string, string][]) => void,
-  setFocusMode: (mode: string) => void,
+  // setFocusMode: (mode: string) => void,
   setNotFound: (notFound: boolean) => void,
   setFiles: (files: File[]) => void,
   setFileIds: (fileIds: string[]) => void,
 ) => {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/chats/${chatId}`,
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    },
-  );
+  try {
+    const data = await apiGet<any>(
+      `${process.env.NEXT_PUBLIC_API_URL}/chats/${chatId}`
+    );
 
-  if (res.status === 404) {
-    setNotFound(true);
+    const messages = data.messages.map((msg: any) => {
+      // Handle metadata whether it's a string or already an object
+      const metadata = typeof msg.metadata === 'string'
+        ? JSON.parse(msg.metadata)
+        : (msg.metadata || {});
+      
+      return {
+        ...msg,
+        ...metadata,
+        // Ensure createdAt is a Date object
+        createdAt: metadata.createdAt ? new Date(metadata.createdAt) : new Date(),
+      };
+    }) as Message[];
+
+    setMessages(messages);
+
+    const history = messages.map((msg) => {
+      return [msg.role, msg.content];
+    }) as [string, string][];
+
+    console.log('[DEBUG] messages loaded');
+
+    if (typeof messages[0].content === 'string') {
+      document.title = messages[0].content;
+    }
+
+    const files = data.chat.files.map((file: any) => {
+      return {
+        fileName: file.name,
+        fileExtension: file.name.split('.').pop(),
+        fileId: file.fileId,
+      };
+    });
+
+    setFiles(files);
+    setFileIds(files.map((file: File) => file.fileId));
+
+    setChatHistory(history);
+    // setFocusMode(data.chat.focusMode);
     setIsMessagesLoaded(true);
-    return;
+  } catch (error: any) {
+    if (error.message === 'API request failed with status 404') {
+      setNotFound(true);
+    }
+    setIsMessagesLoaded(true);
   }
-
-  const data = await res.json();
-
-  const messages = data.messages.map((msg: any) => {
-    return {
-      ...msg,
-      ...JSON.parse(msg.metadata),
-    };
-  }) as Message[];
-
-  setMessages(messages);
-
-  const history = messages.map((msg) => {
-    return [msg.role, msg.content];
-  }) as [string, string][];
-
-  console.log('[DEBUG] messages loaded');
-
-  if (typeof messages[0].content === 'string') {
-    document.title = messages[0].content;
-  }
-
-  const files = data.chat.files.map((file: any) => {
-    return {
-      fileName: file.name,
-      fileExtension: file.name.split('.').pop(),
-      fileId: file.fileId,
-    };
-  });
-
-  setFiles(files);
-  setFileIds(files.map((file: File) => file.fileId));
-
-  setChatHistory(history);
-  setFocusMode(data.chat.focusMode);
-  setIsMessagesLoaded(true);
 };
 
 const ChatWindow = ({ id }: { id?: string }) => {
@@ -245,8 +248,8 @@ const ChatWindow = ({ id }: { id?: string }) => {
   const [files, setFiles] = useState<File[]>([]);
   const [fileIds, setFileIds] = useState<string[]>([]);
 
-  const [focusMode, setFocusMode] = useState('webSearch');
-  const [optimizationMode, setOptimizationMode] = useState('speed');
+  // const [focusMode, setFocusMode] = useState('webSearch');
+  // const [optimizationMode, setOptimizationMode] = useState('speed');
 
   const [isMessagesLoaded, setIsMessagesLoaded] = useState(false);
 
@@ -264,7 +267,7 @@ const ChatWindow = ({ id }: { id?: string }) => {
         setMessages,
         setIsMessagesLoaded,
         setChatHistory,
-        setFocusMode,
+        // setFocusMode,
         setNotFound,
         setFiles,
         setFileIds,
@@ -276,6 +279,32 @@ const ChatWindow = ({ id }: { id?: string }) => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Effect to handle chat ID changes from library selection
+  useEffect(() => {
+    if (id && id !== chatId) {
+      // Reset state for new chat
+      setMessages([]);
+      setChatHistory([]);
+      setFiles([]);
+      setFileIds([]);
+      setIsMessagesLoaded(false);
+      setNewChatCreated(false);
+      setNotFound(false);
+      setChatId(id);
+      
+      // Load the new chat
+      loadMessages(
+        id,
+        setMessages,
+        setIsMessagesLoaded,
+        setChatHistory,
+        setNotFound,
+        setFiles,
+        setFileIds,
+      );
+    }
+  }, [id]);
 
   const messagesRef = useRef<Message[]>([]);
 
@@ -315,8 +344,8 @@ const ChatWindow = ({ id }: { id?: string }) => {
           token: token, // Include token in the message
         },
         files: fileIds,
-        focusMode: focusMode,
-        optimizationMode: optimizationMode,
+        // focusMode: focusMode,
+        // optimizationMode: optimizationMode,
         history: [...chatHistory, ['human', message]],
         token: token, // Also include at top level for flexibility
       }),
@@ -508,6 +537,17 @@ const ChatWindow = ({ id }: { id?: string }) => {
           toast.error('Failed to parse plan data.');
         }
       }
+
+      if (data.type === 'planEnd') {
+        setChatHistory((prevHistory) => [
+          ...prevHistory,
+          ['human', message],
+          ['assistant', recievedMessage],
+        ]);
+
+        ws?.removeEventListener('message', messageHandler);
+        setLoading(false);
+      }
     };
 
     ws?.addEventListener('message', messageHandler);
@@ -572,10 +612,10 @@ const ChatWindow = ({ id }: { id?: string }) => {
         ) : (
           <EmptyChat
             sendMessage={sendMessage}
-            focusMode={focusMode}
-            setFocusMode={setFocusMode}
-            optimizationMode={optimizationMode}
-            setOptimizationMode={setOptimizationMode}
+            // focusMode={focusMode}
+            // setFocusMode={setFocusMode}
+            // optimizationMode={optimizationMode}
+            // setOptimizationMode={setOptimizationMode}
             fileIds={fileIds}
             setFileIds={setFileIds}
             files={files}

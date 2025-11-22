@@ -4,6 +4,7 @@ import { Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { apiGet } from '@/lib/api';
 
 interface Discover {
   title: string;
@@ -19,22 +20,13 @@ const Page = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/discover`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+        const data = await apiGet<{ blogs: Discover[] }>(
+          `${process.env.NEXT_PUBLIC_API_URL}/discover`
+        );
 
-        const data = await res.json();
+        const filteredBlogs = data.blogs.filter((blog: Discover) => blog.thumbnail);
 
-        if (!res.ok) {
-          throw new Error(data.message);
-        }
-
-        data.blogs = data.blogs.filter((blog: Discover) => blog.thumbnail);
-
-        setDiscover(data.blogs);
+        setDiscover(filteredBlogs);
       } catch (err: any) {
         console.error('Error fetching data:', err.message);
         toast.error('Error fetching data');

@@ -7,6 +7,7 @@ import { useSelectedLayoutSegments } from 'next/navigation';
 import React, { useState, type ReactNode } from 'react';
 import Layout from './Layout';
 import SettingsDialog from './SettingsDialog';
+import LibraryPanel from './LibraryPanel';
 import { useAuth } from '@/lib/AuthContext';
 
 const VerticalIconContainer = ({ children }: { children: ReactNode }) => {
@@ -15,10 +16,19 @@ const VerticalIconContainer = ({ children }: { children: ReactNode }) => {
   );
 };
 
-const Sidebar = ({ children }: { children: React.ReactNode }) => {
+const Sidebar = ({
+  children,
+  selectedChatId,
+  setSelectedChatId,
+}: {
+  children: React.ReactNode;
+  selectedChatId?: string;
+  setSelectedChatId?: (chatId: string | undefined) => void;
+}) => {
   const segments = useSelectedLayoutSegments();
   const { logout } = useAuth();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
 
   const navLinks = [
     {
@@ -32,12 +42,6 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
     //   href: '/discover',
     //   active: segments.includes('discover'),
     //   label: 'Discover',
-    // },
-    // {
-    //   icon: BookOpenText,
-    //   href: '/library',
-    //   active: segments.includes('library'),
-    //   label: 'Library',
     // },
   ];
 
@@ -66,6 +70,17 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
                 )}
               </Link>
             ))}
+            <button
+              onClick={() => setIsLibraryOpen(true)}
+              className={cn(
+                'relative flex flex-row items-center justify-center cursor-pointer hover:bg-black/10 dark:hover:bg-white/10 duration-150 transition w-full py-2 rounded-lg',
+                isLibraryOpen
+                  ? 'text-black dark:text-white'
+                  : 'text-black/70 dark:text-white/70',
+              )}
+            >
+              <BookOpenText />
+            </button>
           </VerticalIconContainer>
 
           <div className="flex flex-col items-center gap-y-3 w-full">
@@ -82,6 +97,11 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
           <SettingsDialog
             isOpen={isSettingsOpen}
             setIsOpen={setIsSettingsOpen}
+          />
+          <LibraryPanel
+            isOpen={isLibraryOpen}
+            setIsOpen={setIsLibraryOpen}
+            setSelectedChatId={setSelectedChatId}
           />
         </div>
       </div>
@@ -105,6 +125,18 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
             <p className="text-xs">{link.label}</p>
           </Link>
         ))}
+        <button
+          onClick={() => setIsLibraryOpen(true)}
+          className={cn(
+            'relative flex flex-col items-center space-y-1 text-center w-full',
+            isLibraryOpen
+              ? 'text-black dark:text-white'
+              : 'text-black dark:text-white/70',
+          )}
+        >
+          <BookOpenText />
+          <p className="text-xs">Library</p>
+        </button>
       </div>
 
       <Layout>{children}</Layout>

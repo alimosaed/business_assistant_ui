@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Lightbox, { GenericSlide, VideoSlide } from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
 import { Message } from './ChatWindow';
+import { apiPost } from '@/lib/api';
 
 type Video = {
   url: string;
@@ -49,29 +50,21 @@ const Searchvideos = ({
             const customOpenAIBaseURL = localStorage.getItem('openAIBaseURL');
             const customOpenAIKey = localStorage.getItem('openAIApiKey');
 
-            const res = await fetch(
+            const data = await apiPost<{ videos: Video[] }>(
               `${process.env.NEXT_PUBLIC_API_URL}/videos`,
               {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
+                query: query,
+                chatHistory: chatHistory,
+                chatModel: {
+                  provider: chatModelProvider,
+                  model: chatModel,
+                  ...(chatModelProvider === 'custom_openai' && {
+                    customOpenAIBaseURL: customOpenAIBaseURL,
+                    customOpenAIKey: customOpenAIKey,
+                  }),
                 },
-                body: JSON.stringify({
-                  query: query,
-                  chatHistory: chatHistory,
-                  chatModel: {
-                    provider: chatModelProvider,
-                    model: chatModel,
-                    ...(chatModelProvider === 'custom_openai' && {
-                      customOpenAIBaseURL: customOpenAIBaseURL,
-                      customOpenAIKey: customOpenAIKey,
-                    }),
-                  },
-                }),
-              },
+              }
             );
-
-            const data = await res.json();
 
             const videos = data.videos ?? [];
             setVideos(videos);

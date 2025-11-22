@@ -6,20 +6,20 @@ import { File } from './ChatWindow';
 
 const EmptyChat = ({
   sendMessage,
-  focusMode,
-  setFocusMode,
-  optimizationMode,
-  setOptimizationMode,
+  // focusMode,
+  // setFocusMode,
+  // optimizationMode,
+  // setOptimizationMode,
   fileIds,
   setFileIds,
   files,
   setFiles,
 }: {
   sendMessage: (message: string) => void;
-  focusMode: string;
-  setFocusMode: (mode: string) => void;
-  optimizationMode: string;
-  setOptimizationMode: (mode: string) => void;
+  // focusMode: string;
+  // setFocusMode: (mode: string) => void;
+  // optimizationMode: string;
+  // setOptimizationMode: (mode: string) => void;
   fileIds: string[];
   setFileIds: (fileIds: string[]) => void;
   files: File[];
@@ -42,10 +42,10 @@ const EmptyChat = ({
         </h2>
         <EmptyChatMessageInput
           sendMessage={sendMessage}
-          focusMode={focusMode}
-          setFocusMode={setFocusMode}
-          optimizationMode={optimizationMode}
-          setOptimizationMode={setOptimizationMode}
+          // focusMode={focusMode}
+          // setFocusMode={setFocusMode}
+          // optimizationMode={optimizationMode}
+          // setOptimizationMode={setOptimizationMode}
           fileIds={fileIds}
           setFileIds={setFileIds}
           files={files}

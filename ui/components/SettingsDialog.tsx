@@ -14,6 +14,7 @@ import React, {
   type SelectHTMLAttributes,
 } from 'react';
 import ThemeSwitcher from './theme/Switcher';
+import { apiGet, apiPost } from '@/lib/api';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 
@@ -99,59 +100,62 @@ const SettingsDialog = ({
     if (isOpen) {
       const fetchConfig = async () => {
         setIsLoading(true);
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/config`, {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+        try {
+          const data = await apiGet<SettingsType>(
+            `${process.env.NEXT_PUBLIC_API_URL}/config`,
+            { skipAuthRedirect: true }
+          );
+          setConfig(data);
 
-        const data = (await res.json()) as SettingsType;
-        setConfig(data);
+          const chatModelProvidersKeys = Object.keys(
+            data.chatModelProviders || {},
+          );
+          const embeddingModelProvidersKeys = Object.keys(
+            data.embeddingModelProviders || {},
+          );
 
-        const chatModelProvidersKeys = Object.keys(
-          data.chatModelProviders || {},
-        );
-        const embeddingModelProvidersKeys = Object.keys(
-          data.embeddingModelProviders || {},
-        );
+          const defaultChatModelProvider =
+            chatModelProvidersKeys.length > 0 ? chatModelProvidersKeys[0] : '';
+          const defaultEmbeddingModelProvider =
+            embeddingModelProvidersKeys.length > 0
+              ? embeddingModelProvidersKeys[0]
+              : '';
 
-        const defaultChatModelProvider =
-          chatModelProvidersKeys.length > 0 ? chatModelProvidersKeys[0] : '';
-        const defaultEmbeddingModelProvider =
-          embeddingModelProvidersKeys.length > 0
-            ? embeddingModelProvidersKeys[0]
-            : '';
+          const chatModelProvider =
+            localStorage.getItem('chatModelProvider') ||
+            defaultChatModelProvider ||
+            '';
+          const chatModel =
+            localStorage.getItem('chatModel') ||
+            (data.chatModelProviders &&
+            data.chatModelProviders[chatModelProvider]?.length > 0
+              ? data.chatModelProviders[chatModelProvider][0].name
+              : undefined) ||
+            '';
+          const embeddingModelProvider =
+            localStorage.getItem('embeddingModelProvider') ||
+            defaultEmbeddingModelProvider ||
+            '';
+          const embeddingModel =
+            localStorage.getItem('embeddingModel') ||
+            (data.embeddingModelProviders &&
+              data.embeddingModelProviders[embeddingModelProvider]?.[0].name) ||
+            '';
 
-        const chatModelProvider =
-          localStorage.getItem('chatModelProvider') ||
-          defaultChatModelProvider ||
-          '';
-        const chatModel =
-          localStorage.getItem('chatModel') ||
-          (data.chatModelProviders &&
-          data.chatModelProviders[chatModelProvider]?.length > 0
-            ? data.chatModelProviders[chatModelProvider][0].name
-            : undefined) ||
-          '';
-        const embeddingModelProvider =
-          localStorage.getItem('embeddingModelProvider') ||
-          defaultEmbeddingModelProvider ||
-          '';
-        const embeddingModel =
-          localStorage.getItem('embeddingModel') ||
-          (data.embeddingModelProviders &&
-            data.embeddingModelProviders[embeddingModelProvider]?.[0].name) ||
-          '';
-
-        setSelectedChatModelProvider(chatModelProvider);
-        setSelectedChatModel(chatModel);
-        setSelectedEmbeddingModelProvider(embeddingModelProvider);
-        setSelectedEmbeddingModel(embeddingModel);
-        setCustomOpenAIApiKey(localStorage.getItem('openAIApiKey') || '');
-        setCustomOpenAIBaseURL(localStorage.getItem('openAIBaseURL') || '');
-        setChatModels(data.chatModelProviders || {});
-        setEmbeddingModels(data.embeddingModelProviders || {});
-        setIsLoading(false);
+          setSelectedChatModelProvider(chatModelProvider);
+          setSelectedChatModel(chatModel);
+          setSelectedEmbeddingModelProvider(embeddingModelProvider);
+          setSelectedEmbeddingModel(embeddingModel);
+          setCustomOpenAIApiKey(localStorage.getItem('openAIApiKey') || '');
+          setCustomOpenAIBaseURL(localStorage.getItem('openAIBaseURL') || '');
+          setChatModels(data.chatModelProviders || {});
+          setEmbeddingModels(data.embeddingModelProviders || {});
+        } catch (error) {
+          console.error('Failed to fetch config:', error);
+          // Don't redirect here - allow theme switching even if config fails
+        } finally {
+          setIsLoading(false);
+        }
       };
 
       fetchConfig();
@@ -163,13 +167,7 @@ const SettingsDialog = ({
     setIsUpdating(true);
 
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/config`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(config),
-      });
+      await apiPost(`${process.env.NEXT_PUBLIC_API_URL}/config`, config);
 
       localStorage.setItem('chatModelProvider', selectedChatModelProvider!);
       localStorage.setItem('chatModel', selectedChatModel!);
@@ -223,7 +221,7 @@ const SettingsDialog = ({
                 <DialogTitle className="text-xl font-medium leading-6 dark:text-white">
                   Settings
                 </DialogTitle>
-                {config && !isLoading && (
+                {!isLoading && (
                   <div className="flex flex-col space-y-4 mt-6">
                     <div className="flex flex-col space-y-1">
                       <p className="text-black/70 dark:text-white/70 text-sm">
