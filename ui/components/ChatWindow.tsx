@@ -180,8 +180,20 @@ const loadMessages = async (
         ? JSON.parse(msg.metadata)
         : (msg.metadata || {});
       
+      // Check if this is a plan message with type and data fields
+      let content = msg.content;
+      let role = msg.role;
+      
+      if (msg.type === 'plan' && msg.data) {
+        // For plan messages, use the data field as content and set role to 'plan'
+        content = msg.data;
+        role = 'plan';
+      }
+      
       return {
         ...msg,
+        content,
+        role,
         ...metadata,
         // Ensure createdAt is a Date object
         createdAt: metadata.createdAt ? new Date(metadata.createdAt) : new Date(),
