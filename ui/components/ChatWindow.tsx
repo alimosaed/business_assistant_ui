@@ -184,9 +184,8 @@ const loadMessages = async (
       let content = msg.content;
       let role = msg.role;
       
-      if (msg.type === 'plan' && msg.data) {
+      if (msg.type === 'plan') {
         // For plan messages, use the data field as content and set role to 'plan'
-        content = msg.data;
         role = 'plan';
       }
       
