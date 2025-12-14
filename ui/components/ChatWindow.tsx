@@ -6,12 +6,14 @@ import { Document } from '@langchain/core/documents';
 import Navbar from './Navbar';
 import Chat from './Chat';
 import EmptyChat from './EmptyChat';
+import SettingsDialog from './SettingsDialog';
 import crypto from 'crypto';
 import { toast } from 'sonner';
 import { useSearchParams } from 'next/navigation';
 import { getSuggestions } from '@/lib/actions';
 import Error from 'next/error';
 import { apiGet } from '@/lib/api';
+import { showErrorToast, BackendError } from '@/lib/errors';
 
 export type Message = {
   messageId: string;
@@ -267,6 +269,8 @@ const ChatWindow = ({ id }: { id?: string }) => {
 
   const [notFound, setNotFound] = useState(false);
 
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
   useEffect(() => {
     if (
       chatId &&
@@ -378,7 +382,14 @@ const ChatWindow = ({ id }: { id?: string }) => {
       const data = JSON.parse(e.data);
 
       if (data.type === 'error') {
-        toast.error(data.data);
+        // Check if it's a structured error with error_code
+        if (data.error_code) {
+          showErrorToast(data as BackendError, () => setIsSettingsOpen(true));
+        } else {
+          // Fallback to simple toast for unstructured errors
+          toast.error(data.data);
+        }
+        
         setLoading(false);
         return;
       }
@@ -655,6 +666,7 @@ const ChatWindow = ({ id }: { id?: string }) => {
             setFiles={setFiles}
           />
         )}
+        <SettingsDialog isOpen={isSettingsOpen} setIsOpen={setIsSettingsOpen} />
       </div>
     )
   ) : (
