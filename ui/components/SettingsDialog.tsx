@@ -16,6 +16,14 @@ import React, {
 import ThemeSwitcher from './theme/Switcher';
 import { apiGet, apiPost } from '@/lib/api';
 
+interface TokenUsage {
+  user_id: string;
+  total_input_tokens: number;
+  total_output_tokens: number;
+  total_cost: number;
+  last_updated: string;
+}
+
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 
 const Input = ({ className, ...restProps }: InputProps) => {
@@ -95,6 +103,8 @@ const SettingsDialog = ({
   const [customOpenAIBaseURL, setCustomOpenAIBaseURL] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [tokenUsage, setTokenUsage] = useState<TokenUsage | null>(null);
+  const [isLoadingTokenUsage, setIsLoadingTokenUsage] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -158,7 +168,24 @@ const SettingsDialog = ({
         }
       };
 
+      const fetchTokenUsage = async () => {
+        setIsLoadingTokenUsage(true);
+        try {
+          const data = await apiGet<TokenUsage>(
+            `${process.env.NEXT_PUBLIC_API_URL}/token-usage/me`,
+            { skipAuthRedirect: true }
+          );
+          setTokenUsage(data);
+        } catch (error) {
+          console.error('Failed to fetch token usage:', error);
+          // Silently fail - token usage is optional information
+        } finally {
+          setIsLoadingTokenUsage(false);
+        }
+      };
+
       fetchConfig();
+      fetchTokenUsage();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
@@ -228,6 +255,51 @@ const SettingsDialog = ({
                         Theme
                       </p>
                       <ThemeSwitcher />
+                    </div>
+
+                    {/* Token Usage Section */}
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-black/70 dark:text-white/70 text-sm">
+                        Token Usage
+                      </p>
+                      <div className="bg-light-primary dark:bg-dark-primary px-4 py-3 rounded-lg border border-light-200 dark:border-dark-200">
+                        {isLoadingTokenUsage ? (
+                          <div className="flex items-center justify-center py-2">
+                            <RefreshCcw className="animate-spin text-black/50 dark:text-white/50" size={16} />
+                          </div>
+                        ) : tokenUsage ? (
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between items-center">
+                              <span className="text-black/70 dark:text-white/70">Total Cost:</span>
+                              <span className="font-semibold text-black dark:text-white">
+                                ${tokenUsage.total_cost.toFixed(4)}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-black/70 dark:text-white/70">Input Tokens:</span>
+                              <span className="text-black dark:text-white">
+                                {tokenUsage.total_input_tokens.toLocaleString()}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-black/70 dark:text-white/70">Output Tokens:</span>
+                              <span className="text-black dark:text-white">
+                                {tokenUsage.total_output_tokens.toLocaleString()}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center pt-1 border-t border-light-200 dark:border-dark-200">
+                              <span className="text-black/50 dark:text-white/50 text-xs">Last Updated:</span>
+                              <span className="text-black/50 dark:text-white/50 text-xs">
+                                {new Date(tokenUsage.last_updated).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-black/50 dark:text-white/50 text-sm text-center py-2">
+                            No usage data available
+                          </p>
+                        )}
+                      </div>
                     </div>
 
 {/* 

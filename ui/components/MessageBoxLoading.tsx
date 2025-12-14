@@ -1,9 +1,20 @@
-const MessageBoxLoading = () => {
+'use client';
+
+import React from 'react';
+
+const MessageBoxLoading = ({ message }: { message: string }) => {
   return (
-    <div className="flex flex-col space-y-2 w-full lg:w-9/12 bg-light-primary dark:bg-dark-primary animate-pulse rounded-lg py-3">
-      <div className="h-2 rounded-full w-full bg-light-secondary dark:bg-dark-secondary" />
-      <div className="h-2 rounded-full w-9/12 bg-light-secondary dark:bg-dark-secondary" />
-      <div className="h-2 rounded-full w-10/12 bg-light-secondary dark:bg-dark-secondary" />
+    <div className="flex flex-col space-y-9 w-full pt-8">
+      <div className="bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 p-4 rounded-2xl max-w-[80%]">
+        <div className="flex items-center space-x-2">
+          <span className="text-base">{message}</span>
+          <div className="flex space-x-1">
+            <span className="animate-bounce animation-delay-0">.</span>
+            <span className="animate-bounce animation-delay-200">.</span>
+            <span className="animate-bounce animation-delay-400">.</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

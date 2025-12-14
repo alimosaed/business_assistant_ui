@@ -252,6 +252,7 @@ const ChatWindow = ({ id }: { id?: string }) => {
 
   const [loading, setLoading] = useState(false);
   const [messageAppeared, setMessageAppeared] = useState(false);
+  const [progressMessage, setProgressMessage] = useState<string | null>(null);
 
   const [chatHistory, setChatHistory] = useState<[string, string][]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -382,6 +383,11 @@ const ChatWindow = ({ id }: { id?: string }) => {
         return;
       }
 
+      if (data.type === 'progress') {
+        setProgressMessage(data.message);
+        return;
+      }
+
       if (data.type === 'sources') {
         sources = data.data;
         if (!added) {
@@ -402,6 +408,10 @@ const ChatWindow = ({ id }: { id?: string }) => {
       }
 
       if (data.type === 'message') {
+        if (progressMessage) {
+          setProgressMessage(null);
+        }
+        
         if (!added) {
           setMessages((prevMessages) => [
             ...prevMessages,
@@ -440,6 +450,7 @@ const ChatWindow = ({ id }: { id?: string }) => {
 
         ws?.removeEventListener('message', messageHandler);
         setLoading(false);
+        setProgressMessage(null);
 
         const lastMsg = messagesRef.current[messagesRef.current.length - 1];
 
@@ -463,6 +474,10 @@ const ChatWindow = ({ id }: { id?: string }) => {
 
       // question & answer
       if (data.type === 'question') {
+        if (progressMessage) {
+          setProgressMessage(null);
+        }
+        
         if (!added) {
           setMessages((prevMessages) => [
             ...prevMessages,
@@ -501,6 +516,7 @@ const ChatWindow = ({ id }: { id?: string }) => {
 
         ws?.removeEventListener('message', messageHandler);
         setLoading(false);
+        setProgressMessage(null);
 
         const lastMsg = messagesRef.current[messagesRef.current.length - 1];
 
@@ -524,6 +540,10 @@ const ChatWindow = ({ id }: { id?: string }) => {
 
       // plan
       if (data.type === 'plan') {
+        if (progressMessage) {
+          setProgressMessage(null);
+        }
+        
         try {
           const plan = data.data.toString();
           if (!added) {
@@ -558,6 +578,7 @@ const ChatWindow = ({ id }: { id?: string }) => {
 
         ws?.removeEventListener('message', messageHandler);
         setLoading(false);
+        setProgressMessage(null);
       }
     };
 
@@ -618,6 +639,7 @@ const ChatWindow = ({ id }: { id?: string }) => {
               setFileIds={setFileIds}
               files={files}
               setFiles={setFiles}
+              progressMessage={progressMessage}
             />
           </>
         ) : (
