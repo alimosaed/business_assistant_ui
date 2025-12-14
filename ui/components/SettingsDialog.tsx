@@ -296,7 +296,7 @@ const SettingsDialog = ({
                             <div className="flex justify-between items-center">
                               <span className="text-black/70 dark:text-white/70">Total Cost:</span>
                               <span className="font-semibold text-black dark:text-white">
-                                ${tokenUsage.total_cost.toFixed(4)}
+                                ${tokenUsage.total_cost.toFixed(2)}
                               </span>
                             </div>
                             <div className="flex justify-between items-center">
@@ -311,12 +311,14 @@ const SettingsDialog = ({
                                 {tokenUsage.total_output_tokens.toLocaleString()}
                               </span>
                             </div>
-                            <div className="flex justify-between items-center pt-1 border-t border-light-200 dark:border-dark-200">
-                              <span className="text-black/50 dark:text-white/50 text-xs">Last Updated:</span>
-                              <span className="text-black/50 dark:text-white/50 text-xs">
-                                {new Date(tokenUsage.last_updated).toLocaleDateString()}
-                              </span>
-                            </div>
+                            {tokenUsage.last_updated && (
+                              <div className="flex justify-between items-center pt-1 border-t border-light-200 dark:border-dark-200">
+                                <span className="text-black/50 dark:text-white/50 text-xs">Last Updated:</span>
+                                <span className="text-black/50 dark:text-white/50 text-xs">
+                                  {new Date(tokenUsage.last_updated).toLocaleDateString()}
+                                </span>
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <p className="text-black/50 dark:text-white/50 text-sm text-center py-2">
