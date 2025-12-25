@@ -305,7 +305,7 @@ const MessageBox = ({
                 {!collapsedSteps[index] && (
                   <div className="p-4 pt-0 space-y-4">
                     {step.details && (
-                      <p className="text-slate-700 dark:text-slate-300 text-base leading-relaxed">
+                      <p className="text-slate-700 dark:text-slate-300 text-base leading-relaxed whitespace-pre-wrap">
                         {step.details}
                       </p>
                     )}
