@@ -284,11 +284,11 @@ const MessageBox = ({
             {steps.map((step, index) => (
               <div key={index} className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
                 <div
-                  className="flex items-center justify-between cursor-pointer p-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                  className="flex items-start justify-between cursor-pointer p-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                   onClick={() => toggleStep(index)}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-full w-8 h-8 flex items-center justify-center bg-blue-600 text-white font-medium text-sm">
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-full w-8 h-8 flex items-center justify-center bg-blue-600 text-white font-medium text-sm flex-shrink-0">
                       {step.step_number}
                     </div>
                     <h3 className="font-semibold text-lg text-slate-900 dark:text-slate-100">
