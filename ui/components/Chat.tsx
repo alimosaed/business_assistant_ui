@@ -16,6 +16,7 @@ const Chat = ({
   setFileIds,
   files,
   setFiles,
+  progressMessage,
 }: {
   messages: Message[];
   sendMessage: (message: string) => void;
@@ -26,6 +27,7 @@ const Chat = ({
   setFileIds: (fileIds: string[]) => void;
   files: File[];
   setFiles: (files: File[]) => void;
+  progressMessage: string | null;
 }) => {
   const [dividerWidth, setDividerWidth] = useState(0);
   const dividerRef = useRef<HTMLDivElement | null>(null);
@@ -79,23 +81,23 @@ const Chat = ({
           </Fragment>
         );
       })}
-      {loading && !messageAppeared && <MessageBoxLoading />}
-      <div ref={messageEnd} className="h-0" />
-      {dividerWidth > 0 && (
-        <div
-          className="bottom-24 lg:bottom-10 fixed z-40"
-          style={{ width: dividerWidth }}
-        >
-          <MessageInput
-            loading={loading}
-            sendMessage={sendMessage}
-            fileIds={fileIds}
-            setFileIds={setFileIds}
-            files={files}
-            setFiles={setFiles}
-          />
-        </div>
+      {loading && !messageAppeared && progressMessage && (
+        <MessageBoxLoading message={progressMessage} />
       )}
+      <div ref={messageEnd} className="h-0" />
+      <div
+        className="bottom-24 lg:bottom-10 fixed z-40"
+        style={{ width: dividerWidth || '100%', maxWidth: '100%' }}
+      >
+        <MessageInput
+          loading={loading}
+          sendMessage={sendMessage}
+          fileIds={fileIds}
+          setFileIds={setFileIds}
+          files={files}
+          setFiles={setFiles}
+        />
+      </div>
     </div>
   );
 };

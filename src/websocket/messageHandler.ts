@@ -114,6 +114,14 @@ const handleEmitterEvents = (
         }),
       );
       sources = parsedData.data;
+    } else if (parsedData.type === 'progress') {
+      ws.send(
+        JSON.stringify({
+          type: 'progress',
+          message: parsedData.message,
+          messageId: messageId,
+        }),
+      );
     }
   });
   emitter.on('end', () => {

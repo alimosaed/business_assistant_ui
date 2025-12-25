@@ -16,6 +16,19 @@ import React, {
 import ThemeSwitcher from './theme/Switcher';
 import { apiGet, apiPost } from '@/lib/api';
 
+interface TokenUsage {
+  user_id: string;
+  total_input_tokens: number;
+  total_output_tokens: number;
+  total_cost: number;
+  last_updated: string;
+}
+
+interface CreditBalance {
+  user_id: string;
+  credit_balance: number;
+}
+
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 
 const Input = ({ className, ...restProps }: InputProps) => {
@@ -95,6 +108,10 @@ const SettingsDialog = ({
   const [customOpenAIBaseURL, setCustomOpenAIBaseURL] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [tokenUsage, setTokenUsage] = useState<TokenUsage | null>(null);
+  const [isLoadingTokenUsage, setIsLoadingTokenUsage] = useState(false);
+  const [creditBalance, setCreditBalance] = useState<CreditBalance | null>(null);
+  const [isLoadingCreditBalance, setIsLoadingCreditBalance] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -158,7 +175,41 @@ const SettingsDialog = ({
         }
       };
 
+      const fetchTokenUsage = async () => {
+        setIsLoadingTokenUsage(true);
+        try {
+          const data = await apiGet<TokenUsage>(
+            `${process.env.NEXT_PUBLIC_API_URL}/token-usage/me`,
+            { skipAuthRedirect: true }
+          );
+          setTokenUsage(data);
+        } catch (error) {
+          console.error('Failed to fetch token usage:', error);
+          // Silently fail - token usage is optional information
+        } finally {
+          setIsLoadingTokenUsage(false);
+        }
+      };
+
+      const fetchCreditBalance = async () => {
+        setIsLoadingCreditBalance(true);
+        try {
+          const data = await apiGet<CreditBalance>(
+            `${process.env.NEXT_PUBLIC_API_URL}/token-usage/credit/me`,
+            { skipAuthRedirect: true }
+          );
+          setCreditBalance(data);
+        } catch (error) {
+          console.error('Failed to fetch credit balance:', error);
+          // Silently fail - credit balance is optional information
+        } finally {
+          setIsLoadingCreditBalance(false);
+        }
+      };
+
       fetchConfig();
+      fetchTokenUsage();
+      fetchCreditBalance();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
@@ -230,7 +281,102 @@ const SettingsDialog = ({
                       <ThemeSwitcher />
                     </div>
 
-{/* 
+                    {/* Token Usage Section */}
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-black/70 dark:text-white/70 text-sm">
+                        Token Usage
+                      </p>
+                      <div className="bg-light-primary dark:bg-dark-primary px-4 py-3 rounded-lg border border-light-200 dark:border-dark-200">
+                        {isLoadingTokenUsage ? (
+                          <div className="flex items-center justify-center py-2">
+                            <RefreshCcw className="animate-spin text-black/50 dark:text-white/50" size={16} />
+                          </div>
+                        ) : tokenUsage ? (
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between items-center">
+                              <span className="text-black/70 dark:text-white/70">Total Cost:</span>
+                              <span className="font-semibold text-black dark:text-white">
+                                ${tokenUsage.total_cost.toFixed(2)}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-black/70 dark:text-white/70">Input Tokens:</span>
+                              <span className="text-black dark:text-white">
+                                {tokenUsage.total_input_tokens.toLocaleString()}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-black/70 dark:text-white/70">Output Tokens:</span>
+                              <span className="text-black dark:text-white">
+                                {tokenUsage.total_output_tokens.toLocaleString()}
+                              </span>
+                            </div>
+                            {tokenUsage.last_updated && (
+                              <div className="flex justify-between items-center pt-1 border-t border-light-200 dark:border-dark-200">
+                                <span className="text-black/50 dark:text-white/50 text-xs">Last Updated:</span>
+                                <span className="text-black/50 dark:text-white/50 text-xs">
+                                  {new Date(tokenUsage.last_updated).toLocaleDateString()}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-black/50 dark:text-white/50 text-sm text-center py-2">
+                            No usage data available
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Credit Balance Section */}
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-black/70 dark:text-white/70 text-sm">
+                        Credit Balance
+                      </p>
+                      <div className="bg-light-primary dark:bg-dark-primary px-4 py-3 rounded-lg border border-light-200 dark:border-dark-200">
+                        {isLoadingCreditBalance ? (
+                          <div className="flex items-center justify-center py-2">
+                            <RefreshCcw className="animate-spin text-black/50 dark:text-white/50" size={16} />
+                          </div>
+                        ) : creditBalance ? (
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between items-center">
+                              <span className="text-black/70 dark:text-white/70">Available Balance:</span>
+                              <span className={cn(
+                                "font-semibold text-lg",
+                                creditBalance.credit_balance <= 0
+                                  ? "text-red-600 dark:text-red-400"
+                                  : creditBalance.credit_balance < 1.0
+                                  ? "text-yellow-600 dark:text-yellow-400"
+                                  : "text-green-600 dark:text-green-400"
+                              )}>
+                                ${creditBalance.credit_balance.toFixed(2)}
+                              </span>
+                            </div>
+                            {creditBalance.credit_balance <= 0 && (
+                              <div className="pt-2 border-t border-light-200 dark:border-dark-200">
+                                <p className="text-red-600 dark:text-red-400 text-xs">
+                                  ⚠️ Your balance is insufficient. Please recharge to continue.
+                                </p>
+                              </div>
+                            )}
+                            {creditBalance.credit_balance > 0 && creditBalance.credit_balance < 1.0 && (
+                              <div className="pt-2 border-t border-light-200 dark:border-dark-200">
+                                <p className="text-yellow-600 dark:text-yellow-400 text-xs">
+                                  ⚠️ Low balance. Consider recharging soon.
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-black/50 dark:text-white/50 text-sm text-center py-2">
+                            No balance data available
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+{/*
                     {config.chatModelProviders && (
                       <div className="flex flex-col space-y-1">
                         <p className="text-black/70 dark:text-white/70 text-sm">

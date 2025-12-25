@@ -6,12 +6,14 @@ import { Document } from '@langchain/core/documents';
 import Navbar from './Navbar';
 import Chat from './Chat';
 import EmptyChat from './EmptyChat';
+import SettingsDialog from './SettingsDialog';
 import crypto from 'crypto';
 import { toast } from 'sonner';
 import { useSearchParams } from 'next/navigation';
 import { getSuggestions } from '@/lib/actions';
 import Error from 'next/error';
 import { apiGet } from '@/lib/api';
+import { showErrorToast, BackendError } from '@/lib/errors';
 
 export type Message = {
   messageId: string;
@@ -180,8 +182,19 @@ const loadMessages = async (
         ? JSON.parse(msg.metadata)
         : (msg.metadata || {});
       
+      // Check if this is a plan message with type and data fields
+      let content = msg.content;
+      let role = msg.role;
+      
+      if (msg.type === 'plan') {
+        // For plan messages, use the data field as content and set role to 'plan'
+        role = 'plan';
+      }
+      
       return {
         ...msg,
+        content,
+        role,
         ...metadata,
         // Ensure createdAt is a Date object
         createdAt: metadata.createdAt ? new Date(metadata.createdAt) : new Date(),
@@ -241,6 +254,7 @@ const ChatWindow = ({ id }: { id?: string }) => {
 
   const [loading, setLoading] = useState(false);
   const [messageAppeared, setMessageAppeared] = useState(false);
+  const [progressMessage, setProgressMessage] = useState<string | null>(null);
 
   const [chatHistory, setChatHistory] = useState<[string, string][]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -254,6 +268,8 @@ const ChatWindow = ({ id }: { id?: string }) => {
   const [isMessagesLoaded, setIsMessagesLoaded] = useState(false);
 
   const [notFound, setNotFound] = useState(false);
+
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   useEffect(() => {
     if (
@@ -366,8 +382,20 @@ const ChatWindow = ({ id }: { id?: string }) => {
       const data = JSON.parse(e.data);
 
       if (data.type === 'error') {
-        toast.error(data.data);
+        // Check if it's a structured error with error_code
+        if (data.error_code) {
+          showErrorToast(data as BackendError, () => setIsSettingsOpen(true));
+        } else {
+          // Fallback to simple toast for unstructured errors
+          toast.error(data.data);
+        }
+        
         setLoading(false);
+        return;
+      }
+
+      if (data.type === 'progress') {
+        setProgressMessage(data.message);
         return;
       }
 
@@ -391,6 +419,10 @@ const ChatWindow = ({ id }: { id?: string }) => {
       }
 
       if (data.type === 'message') {
+        if (progressMessage) {
+          setProgressMessage(null);
+        }
+        
         if (!added) {
           setMessages((prevMessages) => [
             ...prevMessages,
@@ -429,6 +461,7 @@ const ChatWindow = ({ id }: { id?: string }) => {
 
         ws?.removeEventListener('message', messageHandler);
         setLoading(false);
+        setProgressMessage(null);
 
         const lastMsg = messagesRef.current[messagesRef.current.length - 1];
 
@@ -452,6 +485,10 @@ const ChatWindow = ({ id }: { id?: string }) => {
 
       // question & answer
       if (data.type === 'question') {
+        if (progressMessage) {
+          setProgressMessage(null);
+        }
+        
         if (!added) {
           setMessages((prevMessages) => [
             ...prevMessages,
@@ -490,6 +527,7 @@ const ChatWindow = ({ id }: { id?: string }) => {
 
         ws?.removeEventListener('message', messageHandler);
         setLoading(false);
+        setProgressMessage(null);
 
         const lastMsg = messagesRef.current[messagesRef.current.length - 1];
 
@@ -513,6 +551,10 @@ const ChatWindow = ({ id }: { id?: string }) => {
 
       // plan
       if (data.type === 'plan') {
+        if (progressMessage) {
+          setProgressMessage(null);
+        }
+        
         try {
           const plan = data.data.toString();
           if (!added) {
@@ -547,6 +589,7 @@ const ChatWindow = ({ id }: { id?: string }) => {
 
         ws?.removeEventListener('message', messageHandler);
         setLoading(false);
+        setProgressMessage(null);
       }
     };
 
@@ -607,6 +650,7 @@ const ChatWindow = ({ id }: { id?: string }) => {
               setFileIds={setFileIds}
               files={files}
               setFiles={setFiles}
+              progressMessage={progressMessage}
             />
           </>
         ) : (
@@ -622,6 +666,7 @@ const ChatWindow = ({ id }: { id?: string }) => {
             setFiles={setFiles}
           />
         )}
+        <SettingsDialog isOpen={isSettingsOpen} setIsOpen={setIsSettingsOpen} />
       </div>
     )
   ) : (
