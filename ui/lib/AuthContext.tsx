@@ -45,14 +45,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const checkTokenExpiration = (token: string): boolean => {
     try {
       const decoded = jwtDecode<JwtPayload>(token);
+      console.log('Decoded token payload:', decoded);
+
       if (decoded.exp) {
         // Store expiration time
         setTokenExpiresAt(decoded.exp * 1000); // Convert to milliseconds
-        
+
         // Check if token is expired
         const currentTime = Date.now();
-        return decoded.exp * 1000 > currentTime;
+        const expirationTime = decoded.exp * 1000;
+        const isValid = expirationTime > currentTime;
+
+        console.log('Token expiration details:', {
+          currentTime: new Date(currentTime).toISOString(),
+          expirationTime: new Date(expirationTime).toISOString(),
+          isValid,
+          timeUntilExpiry: Math.floor((expirationTime - currentTime) / 1000 / 60) + ' minutes'
+        });
+
+        return isValid;
       }
+      console.error('Token has no expiration field');
       return false;
     } catch (error) {
       console.error('Error decoding token:', error);
@@ -139,46 +152,53 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (token: string) => {
     try {
-      console.log('Verifying token with backend...');
-      await verifyToken(token);
-      console.log('Token verified successfully with backend');
-      
-      // Check token expiration
-      console.log('Checking token expiration...');
+      console.log('=== Login Process Started ===');
+      console.log('Token received (first 20 chars):', token.substring(0, 20) + '...');
+
+      console.log('Step 1: Verifying token with backend...');
+      try {
+        await verifyToken(token);
+        console.log('✓ Token verified successfully with backend');
+      } catch (verifyError) {
+        console.error('✗ Backend verification failed:', verifyError);
+        throw verifyError;
+      }
+
+      console.log('Step 2: Checking token expiration...');
       const isValid = checkTokenExpiration(token);
-      console.log('Token expiration check result:', isValid ? 'Valid' : 'Expired');
-      
+      console.log('Token expiration check result:', isValid ? '✓ Valid' : '✗ Expired');
+
       if (isValid) {
-        console.log('Checking if localStorage is available...');
+        console.log('Step 3: Storing token...');
         const storageAvailable = isLocalStorageAvailable();
         console.log('localStorage available:', storageAvailable);
-        
+
         if (storageAvailable) {
-          console.log('Storing token in localStorage...');
           try {
             localStorage.setItem('authToken', token);
-            // Verify it was stored correctly
             const storedToken = localStorage.getItem('authToken');
-            console.log('Token storage verification:', storedToken === token ? 'Success' : 'Failed');
-            
+            console.log('Token storage verification:', storedToken === token ? '✓ Success' : '✗ Failed');
+
             if (storedToken !== token) {
-              console.error('Token was not stored correctly in localStorage');
+              console.error('✗ Token was not stored correctly in localStorage');
             }
           } catch (storageError) {
-            console.error('Error storing token in localStorage:', storageError);
+            console.error('✗ Error storing token in localStorage:', storageError);
           }
         } else {
-          console.error('localStorage is not available, authentication will not persist');
+          console.error('✗ localStorage is not available, authentication will not persist');
         }
-        
+
         setIsAuthenticated(true);
+        console.log('=== Login Successful ===');
         return true;
       } else {
-        console.error('Token expired or invalid');
+        console.error('✗ Token expired or invalid');
         return false;
       }
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error('=== Login Failed ===');
+      console.error('Error:', error);
       return false;
     }
   };
