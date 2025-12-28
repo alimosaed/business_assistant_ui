@@ -1,10 +1,13 @@
 'use client';
 
 import '../auth/auth.css';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 
 const LoginPage = () => {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -13,6 +16,26 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+
+  // Check for error messages in URL parameters (only once on mount)
+  useEffect(() => {
+    const errorParam = searchParams.get('error');
+    const messageParam = searchParams.get('message');
+
+    if (messageParam) {
+      setError(messageParam);
+    } else if (errorParam) {
+      // Map error codes to user-friendly messages
+      const errorMessages: Record<string, string> = {
+        'account_exists': 'An account with this email already exists using a different authentication method.',
+        'authentication-failed': 'Authentication failed. Please try again.',
+        'authentication-error': 'An error occurred during authentication.',
+        'no-token': 'No authentication token was provided.',
+      };
+      setError(errorMessages[errorParam] || 'An error occurred. Please try again.');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
 
   const handleGoogleLogin = () => {
     window.location.href = 'http://127.0.0.1:8000/api/auth/login?provider=google';
@@ -87,7 +110,10 @@ const LoginPage = () => {
         const loginSuccess = await login(data.access_token);
 
         if (loginSuccess) {
-          window.location.href = '/';
+          // Small delay to ensure auth state propagates before navigation
+          setTimeout(() => {
+            router.push('/');
+          }, 100);
         } else {
           setError('Token verification failed. Please try again.');
         }
@@ -125,7 +151,24 @@ const LoginPage = () => {
 
         {error && (
           <div className="error-message">
-            {error}
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ flexShrink: 0, marginTop: '0.125rem' }}
+              >
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              <div style={{ flex: 1 }}>{error}</div>
+            </div>
           </div>
         )}
 
