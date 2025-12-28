@@ -38,15 +38,15 @@ const LoginPage = () => {
   }, []); // Only run once on mount
 
   const handleGoogleLogin = () => {
-    window.location.href = 'http://127.0.0.1:8000/api/auth/login?provider=google';
+    window.location.href = 'http://chat.bixpod.com/api/auth/login?provider=google';
   };
 
   const handleAppleLogin = () => {
-    window.location.href = 'http://127.0.0.1:8000/api/auth/login?provider=apple';
+    window.location.href = 'http://chat.bixpod.com/api/auth/login?provider=apple';
   };
 
   const handleMicrosoftLogin = () => {
-    window.location.href = 'http://127.0.0.1:8000/api/auth/login?provider=microsoft';
+    window.location.href = 'http://chat.bixpod.com/api/auth/login?provider=microsoft';
   };
 
   const handleEmailContinue = () => {
