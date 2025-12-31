@@ -15,6 +15,12 @@ export const handleConnection = async (
   request: IncomingMessage,
 ) => {
   try {
+    // Disable timeout on the underlying socket to prevent 2-minute disconnections
+    if (request.socket) {
+      request.socket.setTimeout(0); // Disable timeout
+      request.socket.setKeepAlive(true, 30000); // Enable TCP keepalive with 30s interval
+    }
+
     const searchParams = new URL(request.url, `http://${request.headers.host}`)
       .searchParams;
 
