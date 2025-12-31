@@ -90,13 +90,31 @@ export const handleConnection = async (
       }
     }, 5);
 
+    // Set up keepalive ping to prevent connection timeout during long operations
+    // Send a ping every 30 seconds to keep the connection alive
+    const keepAliveInterval = setInterval(() => {
+      if (ws.readyState === ws.OPEN) {
+        ws.ping();
+      } else {
+        clearInterval(keepAliveInterval);
+      }
+    }, 30000); // 30 seconds
+
     ws.on(
       'message',
       async (message) =>
         await handleMessage(message.toString(), ws, llm, embeddings),
     );
 
-    ws.on('close', () => logger.debug('Connection closed'));
+    ws.on('close', () => {
+      clearInterval(keepAliveInterval);
+      logger.debug('Connection closed');
+    });
+
+    ws.on('error', (error) => {
+      clearInterval(keepAliveInterval);
+      logger.error('WebSocket error:', error);
+    });
   } catch (err) {
     ws.send(
       JSON.stringify({
