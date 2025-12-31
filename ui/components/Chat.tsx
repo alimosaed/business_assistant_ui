@@ -58,7 +58,7 @@ const Chat = ({
   }, [messages]);
 
   return (
-    <div className="flex flex-col space-y-6 pt-8 pb-44 lg:pb-32 sm:mx-4 md:mx-8">
+    <div className="flex flex-col space-y-6 pt-8 pb-72 lg:pb-64 sm:mx-4 md:mx-8">
       {messages.map((msg, i) => {
         const isLast = i === messages.length - 1;
 
@@ -84,19 +84,22 @@ const Chat = ({
       {loading && !messageAppeared && progressMessage && (
         <MessageBoxLoading message={progressMessage} />
       )}
-      <div ref={messageEnd} className="h-0" />
+      <div ref={messageEnd} className="h-0 pb-4" />
       <div
-        className="bottom-24 lg:bottom-10 fixed z-40"
-        style={{ width: dividerWidth || '100%', maxWidth: '100%' }}
+        className="bottom-24 lg:bottom-10 fixed z-40 left-0 right-0 flex justify-center px-4 md:px-8"
       >
-        <MessageInput
-          loading={loading}
-          sendMessage={sendMessage}
-          fileIds={fileIds}
-          setFileIds={setFileIds}
-          files={files}
-          setFiles={setFiles}
-        />
+        <div
+          style={{ width: dividerWidth || '100%', maxWidth: '100%' }}
+        >
+          <MessageInput
+            loading={loading}
+            sendMessage={sendMessage}
+            fileIds={fileIds}
+            setFileIds={setFileIds}
+            files={files}
+            setFiles={setFiles}
+          />
+        </div>
       </div>
     </div>
   );

@@ -41,8 +41,8 @@ const useSocket = (
   
   // Create a function to establish WebSocket connection
   const connectWs = useCallback(() => {
-    // Replace OpenAI URL with localhost
-    const wsURL = new URL('wss://chat.bixpod.com/connect');
+    // Use the WebSocket URL from environment variables
+    const wsURL = new URL(`${process.env.NEXT_PUBLIC_WS_URL}/connect`);
     
     // Get the JWT token from localStorage
     const token = localStorage.getItem('authToken');

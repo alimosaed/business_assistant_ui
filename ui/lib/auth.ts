@@ -7,7 +7,7 @@ export const verifyToken = async (token: string): Promise<any> => {
     localStorage.setItem('authToken', token);
 
     try {
-      const userData = await apiGet('http://chat.bixpod.com/api/auth/me');
+      const userData = await apiGet(`${process.env.NEXT_PUBLIC_API_URL}/auth/me`);
       // Verification succeeded - keep the new token
       return userData;
     } catch (error) {

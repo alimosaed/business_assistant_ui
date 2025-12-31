@@ -132,10 +132,14 @@ const MessageBox = ({
     if (message.role === 'plan') {
       try {
         const plan = JSON.parse(message.content);
-        setSteps(plan.steps);
-        setCollapsedSteps(new Array(plan.steps.length).fill(true));
-        setCollapsedReasons(new Array(plan.steps.length).fill(true));
-        console.log('Plan:', plan);
+        if (plan?.steps && Array.isArray(plan.steps)) {
+          setSteps(plan.steps);
+          setCollapsedSteps(new Array(plan.steps.length).fill(true));
+          setCollapsedReasons(new Array(plan.steps.length).fill(true));
+          console.log('Plan:', plan);
+        } else {
+          console.error('Failed to parse plan: steps property is missing or invalid', plan);
+        }
       } catch (error) {
         console.error('Failed to parse plan:', error);
       }
