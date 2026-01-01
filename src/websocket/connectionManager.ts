@@ -15,10 +15,17 @@ export const handleConnection = async (
   request: IncomingMessage,
 ) => {
   try {
-    // Disable timeout on the underlying socket to prevent 2-minute disconnections
+    // Set timeout to 5 minutes (300000ms) on the underlying socket
     if (request.socket) {
-      request.socket.setTimeout(0); // Disable timeout
+      request.socket.setTimeout(300000); // 5 minutes timeout
       request.socket.setKeepAlive(true, 30000); // Enable TCP keepalive with 30s interval
+
+      // Handle timeout event - reset the timer when timeout occurs
+      request.socket.on('timeout', () => {
+        logger.debug('Socket timeout reached, refreshing timeout');
+        // Reset the timeout instead of closing the connection
+        request.socket.setTimeout(300000);
+      });
     }
 
     const searchParams = new URL(request.url, `http://${request.headers.host}`)
@@ -97,19 +104,37 @@ export const handleConnection = async (
     }, 5);
 
     // Set up keepalive ping to prevent connection timeout during long operations
-    // Send a ping every 30 seconds to keep the connection alive
+    // Send a ping every 25 seconds (well before the 2-minute default timeout)
     const keepAliveInterval = setInterval(() => {
       if (ws.readyState === ws.OPEN) {
         ws.ping();
+        // Also refresh the socket timeout on each ping
+        if (request.socket) {
+          request.socket.setTimeout(300000);
+        }
       } else {
         clearInterval(keepAliveInterval);
       }
-    }, 30000); // 30 seconds
+    }, 25000); // 25 seconds - frequent enough to prevent 2-minute timeout
+
+    // Handle pong responses to ensure connection is alive
+    ws.on('pong', () => {
+      logger.debug('Received pong from client');
+      // Refresh socket timeout on pong
+      if (request.socket) {
+        request.socket.setTimeout(300000);
+      }
+    });
 
     ws.on(
       'message',
-      async (message) =>
-        await handleMessage(message.toString(), ws, llm, embeddings),
+      async (message) => {
+        // Refresh socket timeout on each message
+        if (request.socket) {
+          request.socket.setTimeout(300000);
+        }
+        await handleMessage(message.toString(), ws, llm, embeddings);
+      },
     );
 
     ws.on('close', () => {
